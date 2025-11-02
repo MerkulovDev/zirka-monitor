@@ -65,10 +65,15 @@ async function waitForIncapsula(page) {
       await page.waitForTimeout(2000);
     }
     
-    // Чекаємо на появу основного контенту
-    await page.waitForSelector('.shutdowns-content, .schedule-table, [class*="schedule"]', {
-      timeout: 30000,
-    });
+    // Чекаємо на появу основного контенту (не строго обов'язкове)
+    try {
+      await page.waitForSelector('.shutdowns-content, .schedule-table, [class*="schedule"], table, .shutdowns-table, [class*="shutdown"]', {
+        timeout: 10000,
+      });
+      console.log('✓ Знайдено селектор розкладу');
+    } catch (error) {
+      console.log('⚠ Спеціальні селектори не знайдені, продовжуємо...');
+    }
     
     // Додаткова затримка для повного рендерингу
     await page.waitForTimeout(2000);
