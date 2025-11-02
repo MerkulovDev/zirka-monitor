@@ -542,9 +542,9 @@ function formatNotificationMessage(oldSchedule, newSchedule, isFirstRun) {
   let message = '';
   
   if (isFirstRun) {
-    message = `🔌 <b>Моніторинг запущено</b>\n\n`;
+    message = `⚠️ <b>Графік оновлено!</b>\n\n`;
     message += `📍 <b>Адреса:</b> ${CONFIG.ADDRESS}\n\n`;
-    message += `<b>Поточний розклад:</b>\n<pre>${escapeHtml(newSchedule)}</pre>`;
+    message += `<b>Новий розклад:</b>\n<pre>${escapeHtml(newSchedule)}</pre>`;
   } else {
     message = `⚠️ <b>Графік оновлено!</b>\n\n`;
     message += `📍 <b>Адреса:</b> ${CONFIG.ADDRESS}\n\n`;
@@ -705,17 +705,13 @@ async function runMonitor() {
       if (comparison.changed) {
         console.log('\n📢 Виявлено зміни у розкладі!');
         
-        // Форматуємо та відправляємо сповіщення (тільки якщо не перший запуск)
-        if (!comparison.isFirstRun) {
-          const message = formatNotificationMessage(
-            oldSchedule,
-            newSchedule,
-            comparison.isFirstRun
-          );
-          await sendTelegramNotification(message, isQuietHours());
-        } else {
-          console.log('✓ Перший запуск - сповіщення не відправляємо');
-        }
+        // Форматуємо та відправляємо сповіщення
+        const message = formatNotificationMessage(
+          oldSchedule,
+          newSchedule,
+          comparison.isFirstRun
+        );
+        await sendTelegramNotification(message, isQuietHours());
         
         // Зберігаємо новий розклад
         await saveSchedule(newSchedule);
