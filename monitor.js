@@ -35,11 +35,13 @@ async function waitForIncapsula(page) {
       
       // Спробуємо знайти кнопку закриття
       const closeButtons = [
+        '.modal__close.m-attention__close',
         '.modal__close',
-        '.modal__overlay',
+        'button.modal__close',
+        '.m-attention__close',
         '[aria-label*="close" i]',
         '[aria-label*="закрити" i]',
-        'button.modal__close',
+        '.modal__overlay',
       ];
       
       let closed = false;
