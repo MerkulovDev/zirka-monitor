@@ -21,10 +21,48 @@ if (!botToken) {
 }
 
 /**
- * Зачекати поки Incapsula завантажиться
+ * Зачекати поки Incapsula завантажиться та закрити модалку якщо є
  */
 async function waitForIncapsula(page) {
   try {
+    // Чекаємо трохи на завантаження
+    await page.waitForTimeout(3000);
+    
+    // Перевіряємо чи є модальне вікно
+    const modalOverlay = await page.$('.modal__overlay');
+    if (modalOverlay) {
+      console.log('Знайдено модальне вікно, закриваю...');
+      
+      // Спробуємо знайти кнопку закриття
+      const closeButtons = [
+        '.modal__close',
+        '.modal__overlay',
+        '[aria-label*="close" i]',
+        '[aria-label*="закрити" i]',
+        'button.modal__close',
+      ];
+      
+      let closed = false;
+      for (const selector of closeButtons) {
+        const button = await page.$(selector);
+        if (button) {
+          await button.click();
+          console.log(`✓ Модалку закрито (${selector})`);
+          closed = true;
+          break;
+        }
+      }
+      
+      // Якщо не знайшли кнопку, просто клацнемо на overlay
+      if (!closed) {
+        await modalOverlay.click();
+        console.log('✓ Клікнуто на overlay');
+      }
+      
+      // Чекаємо поки модалка зникне
+      await page.waitForTimeout(2000);
+    }
+    
     // Чекаємо на появу основного контенту
     await page.waitForSelector('.shutdowns-content, .schedule-table, [class*="schedule"]', {
       timeout: 30000,
