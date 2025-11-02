@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs-extra');
 const path = require('path');
+const https = require('https');
 
 // Конфігурація
 const CONFIG = {
@@ -26,7 +27,7 @@ if (!botToken) {
 async function waitForIncapsula(page) {
   try {
     // Чекаємо трохи на завантаження
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     // Перевіряємо чи є модальне вікно
     const modalOverlay = await page.$('.modal__overlay');
@@ -62,7 +63,7 @@ async function waitForIncapsula(page) {
       }
       
       // Чекаємо поки модалка зникне
-      await page.waitForTimeout(2000);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
     // Чекаємо на появу основного контенту (не строго обов'язкове)
@@ -76,7 +77,7 @@ async function waitForIncapsula(page) {
     }
     
     // Додаткова затримка для повного рендерингу
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     console.log('✓ Сторінка завантажилась');
   } catch (error) {
@@ -85,35 +86,279 @@ async function waitForIncapsula(page) {
 }
 
 /**
+ * Зробити API запит за розкладом
+ */
+async function getScheduleViaAPI(cookies, headers) {
+  try {
+    console.log('Спроба отримати розклад через API...');
+    
+    // Формуємо cookie header
+    const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    
+    // CSRF токен з cookies
+    const csrfCookie = cookies.find(c => c.name.includes('csrf'));
+    const csrfToken = csrfCookie ? csrfCookie.value : '';
+    
+    // Формуємо postData
+    const postData = new URLSearchParams({
+      method: 'getHomeNum',
+      'data[0][name]': 'city',
+      'data[0][value]': 'м. Вишгород',
+      'data[1][name]': 'street',
+      'data[1][value]': 'вул. Шолуденка',
+      'data[2][name]': 'updateFact',
+      'data[2][value]': new Date().toLocaleString('uk-UA', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(',', '')
+    });
+    
+    const options = {
+      hostname: 'www.dtek-krem.com.ua',
+      port: 443,
+      path: '/ua/ajax',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'uk-UA,uk;q=0.9',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'cookie': cookieStr,
+        'origin': 'https://www.dtek-krem.com.ua',
+        'referer': 'https://www.dtek-krem.com.ua/ua/shutdowns',
+        'user-agent': headers.userAgent,
+        'x-csrf-token': csrfToken,
+        'x-requested-with': 'XMLHttpRequest',
+      }
+    };
+    
+    return new Promise((resolve, reject) => {
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          console.log(`API відповідь (${res.statusCode}):`, data.substring(0, 200));
+          try {
+            const json = JSON.parse(data);
+            console.log('✓ API відповідь відпарсено');
+            resolve(json);
+          } catch (e) {
+            console.log('Помилка парсингу API відповіді:', e.message, data.substring(0, 200));
+            resolve(null);
+          }
+        });
+      });
+      
+      req.on('error', (e) => {
+        console.error('Помилка API запиту:', e.message);
+        resolve(null);
+      });
+      
+      req.write(postData.toString());
+      req.end();
+    });
+  } catch (error) {
+    console.error('Помилка API запиту:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Отримати дані розкладу через форму на сторінці
+ */
+async function fillFormAndGetSchedule(page) {
+  try {
+    console.log('Заповнення форми...');
+    
+    // Заповнюємо місто
+    await page.waitForSelector('#city', { timeout: 10000 });
+    await page.click('#city');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await page.type('#city', 'м. Вишгород');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Чекаємо на появу автокомпліту та клікаємо
+    try {
+      await page.waitForSelector('#cityautocomplete-list.autocomplete-items', { timeout: 5000 });
+      await page.click('#cityautocomplete-list > div:first-child');
+      console.log('✓ Вибрано місто з автокомпліту');
+    } catch (e) {
+      console.log('Автокомпліт не з\'явився для міста, пропускаємо...');
+    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Заповнюємо вулицю
+    await page.waitForSelector('#street:not([disabled])', { timeout: 10000 });
+    await page.click('#street');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await page.type('#street', 'вул. Шолуденка');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Чекаємо на появу автокомпліту та клікаємо
+    try {
+      await page.waitForSelector('#streetautocomplete-list.autocomplete-items', { timeout: 5000 });
+      await page.click('#streetautocomplete-list > div:first-child');
+      console.log('✓ Вибрано вулицю з автокомпліту');
+    } catch (e) {
+      console.log('Автокомпліт не з\'явився для вулиці, пропускаємо...');
+    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Заповнюємо будинок
+    console.log('Чекаю на появу поля будинку...');
+    await page.waitForSelector('#house_num:not([disabled])', { timeout: 15000 });
+    await page.click('#house_num');
+    await new Promise(resolve => setTimeout(resolve, 500));
+    await page.type('#house_num', '18А');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Чекаємо на появу автокомпліту та клікаємо
+    try {
+      await page.waitForSelector('#house_numautocomplete-list.autocomplete-items', { timeout: 5000 });
+      await page.click('#house_numautocomplete-list > div:first-child');
+      console.log('✓ Вибрано будинок з автокомпліту');
+    } catch (e) {
+      console.log('Автокомпліт не з\'явився для будинку, пропускаємо...');
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Отримуємо дані з форми
+    const scheduleData = await page.evaluate(() => {
+      // Знаходимо групу
+      const groupDiv = document.getElementById('group-name');
+      const group = groupDiv ? groupDiv.textContent.trim() : null;
+      
+      console.log('Знайдено групу:', group);
+      
+      // Знаходимо таблицю розкладу (тільки активну)
+      const table = document.querySelector('table');
+      if (!table) {
+        console.log('Таблиця не знайдена');
+        return null;
+      }
+      
+      // Знаходимо всі комірки з розкладом
+      const scheduledCells = table.querySelectorAll('.cell-scheduled, .cell-first-half, .cell-second-half');
+      console.log('Знайдено комірок з розкладом:', scheduledCells.length);
+      
+      const timeSlots = [];
+      
+      // Отримуємо всі headers з годинами
+      const headers = Array.from(table.querySelectorAll('th[scope="col"] div'));
+      console.log('Знайдено headers:', headers.length);
+      
+      scheduledCells.forEach((cell, index) => {
+        const row = cell.closest('tr');
+        const cellIndex = Array.from(row.cells).indexOf(cell);
+        // Віднімаємо 2 бо перші 2 колонки - це заголовки
+        const headerIndex = cellIndex - 2;
+        
+        if (headerIndex >= 0 && headerIndex < headers.length) {
+          const timeText = headers[headerIndex].textContent.trim();
+          const cellType = cell.classList.contains('cell-first-half') ? '30' :
+                          cell.classList.contains('cell-second-half') ? '30' : '00';
+          timeSlots.push({ time: timeText, type: cellType });
+        }
+      });
+      
+      return { group, timeSlots };
+    });
+    
+    console.log('Дані з таблиці:', scheduleData);
+    
+    if (scheduleData && scheduleData.group) {
+      console.log(`✓ Група знайдена: ${scheduleData.group}`);
+      
+      if (scheduleData.timeSlots && scheduleData.timeSlots.length > 0) {
+        console.log('✓ Дані з таблиці отримано');
+        let result = `Група: ${scheduleData.group}\n\n`;
+        
+        // Форматуємо розклад
+        let startTime = null;
+        let endTime = null;
+        
+        scheduleData.timeSlots.forEach((slot, idx) => {
+          const [startH, endH] = slot.time.split('-');
+          if (idx === 0) {
+            startTime = `${startH}:${slot.type}`;
+          }
+          endTime = `${endH}:00`;
+        });
+        
+        if (startTime && endTime) {
+          result += `Відключення: ${startTime}\n`;
+          result += `Увімкнення: ${endTime}\n`;
+        }
+        
+        return result.trim();
+      } else {
+        // Навіть якщо таблиця пуста, повертаємо групу
+        console.log('⚠️ Таблиця розкладу порожня, але група є');
+        return `Група: ${scheduleData.group}`;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Помилка заповнення форми:', error.message);
+    return null;
+  }
+}
+
+/**
  * Знайти розклад відключень для адреси
  */
-async function findShutdownSchedule(page) {
+async function findShutdownSchedule(page, cookies, headers) {
   try {
     console.log('Пошук розкладу для адреси...');
     
-    // Спробуємо знайти текст з адресою або 18А
-    const houseNumber = '18А';
+    // Спочатку спробуємо через API
+    const apiData = await getScheduleViaAPI(cookies, headers);
+    if (apiData && apiData.result) {
+      console.log('✓ Дані отримані з API');
+      
+      // Парсимо API відповідь
+      let result = '';
+      if (apiData.result.sub_type_reason && apiData.result.sub_type_reason.length > 0) {
+        result += `Група: ${apiData.result.sub_type_reason[0]}\n`;
+      }
+      if (apiData.result.start_date) {
+        result += `Початок: ${apiData.result.start_date}\n`;
+      }
+      if (apiData.result.end_date) {
+        result += `Кінець: ${apiData.result.end_date}\n`;
+      }
+      if (apiData.result.type) {
+        result += `Тип: ${apiData.result.type}\n`;
+      }
+      
+      return result.trim() || JSON.stringify(apiData.result);
+    }
     
-    // Отримуємо весь текст сторінки
+    // Fallback: спробуємо через форму
+    const formSchedule = await fillFormAndGetSchedule(page);
+    if (formSchedule) {
+      return formSchedule;
+    }
+    
+    // Fallback: шукаємо текст з адресою
+    const houseNumber = '18А';
     const pageContent = await page.evaluate(() => {
       return document.body.innerText;
     });
     
     console.log(`Довжина сторінки: ${pageContent.length} символів`);
-    console.log(`Перші 500 символів: ${pageContent.substring(0, 500)}`);
     
-    // Шукаємо ключові слова навколо номера будинку
     const lines = pageContent.split('\n');
     let scheduleFound = false;
     let scheduleText = '';
-    let foundIndex = -1;
     
-    // Шукаємо рядок з номером будинку
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].includes(houseNumber) || lines[i].includes('18') || lines[i].includes('Шолуденка')) {
-        foundIndex = i;
-        
-        // Збираємо контекст навколо знайденої адреси
         const startIdx = Math.max(0, i - 2);
         const endIdx = Math.min(lines.length, i + 10);
         
@@ -126,26 +371,8 @@ async function findShutdownSchedule(page) {
       }
     }
     
-    if (!scheduleFound) {
-      // Спробуємо через селектор таблиці
-      const tableData = await page.evaluate(() => {
-        const tables = Array.from(document.querySelectorAll('table'));
-        return tables.map(table => table.innerText);
-      });
-      
-      if (tableData.length > 0) {
-        for (const tableText of tableData) {
-          if (tableText.includes(houseNumber) || tableText.includes('18')) {
-            scheduleText = tableText;
-            scheduleFound = true;
-            break;
-          }
-        }
-      }
-    }
-    
     if (scheduleFound) {
-      console.log('✓ Розклад знайдено');
+      console.log('✓ Розклад знайдено (текстовий)');
       return scheduleText.trim();
     } else {
       console.log('⚠ Розклад не знайдено для адреси');
@@ -307,6 +534,22 @@ async function runMonitor() {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
     
+    // Слухаємо network requests для знаходження API
+    const apiResponses = [];
+    page.on('response', async response => {
+      const url = response.url();
+      const contentType = response.headers()['content-type'] || '';
+      if (contentType.includes('json') || url.includes('api') || url.includes('ajax') || url.includes('shutdown')) {
+        try {
+          const data = await response.json();
+          apiResponses.push({ url, data });
+          console.log(`API Response: ${url}`);
+        } catch (e) {
+          // Не JSON
+        }
+      }
+    });
+    
     // Переходимо на сторінку
     console.log('🌐 Завантаження сторінки...');
     await page.goto(CONFIG.URL, {
@@ -317,8 +560,27 @@ async function runMonitor() {
     // Чекаємо поки Incapsula завантажиться
     await waitForIncapsula(page);
     
-    // Знаходимо розклад
-    const newSchedule = await findShutdownSchedule(page);
+    // Перевіряємо чи є API responses
+    console.log(`Захоплено API responses: ${apiResponses.length}`);
+    if (apiResponses.length > 0) {
+      console.log('Знайдені API URLs:');
+      apiResponses.forEach((resp, idx) => {
+        console.log(`${idx + 1}. ${resp.url.substring(0, 150)}`);
+      });
+    }
+    
+    // Отримуємо cookies та headers для API запиту
+    const cookies = await page.cookies();
+    const headers = await page.evaluate(() => {
+      return {
+        userAgent: navigator.userAgent,
+      };
+    });
+    
+    console.log(`Отримано cookies: ${cookies.length}`);
+    
+    // Знаходимо розклад (спочатку API, потім форма)
+    const newSchedule = await findShutdownSchedule(page, cookies, headers);
     
     if (newSchedule) {
       // Порівнюємо з попередніми даними
