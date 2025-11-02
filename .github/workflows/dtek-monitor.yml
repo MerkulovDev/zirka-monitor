@@ -1,0 +1,49 @@
+name: DTEK Power Outage Monitor
+
+on:
+  schedule:
+    # Запускає кожну годину
+    - cron: '0 * * * *'
+  workflow_dispatch: # Можна запустити вручну
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create data directory
+        run: mkdir -p data
+      
+      - name: Run monitor script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node monitor.js
+      
+      - name: Commit and push if data changed
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          if [ -n "$(git status --porcelain)" ]; then
+            git add data/
+            git commit -m "Auto-update: Monitor data $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          fi
+          
+          git push || echo "Nothing to push"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
