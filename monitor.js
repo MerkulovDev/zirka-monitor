@@ -277,28 +277,57 @@ async function fillFormAndGetSchedule(page) {
         console.log('✓ Дані з таблиці отримано');
         let result = `Група: ${scheduleData.group}\n\n`;
         
-        // Форматуємо розклад
-        let startTime = null;
-        let endTime = null;
+        // Групуємо комірки по суміжних періодах
+        const outages = [];
+        let currentOutage = null;
         
         scheduleData.timeSlots.forEach((slot, idx) => {
           const [startH, endH] = slot.time.split('-');
+          const cellType = slot.type;
+          
           if (idx === 0) {
-            startTime = `${startH}:${slot.type}`;
+            // Початок першого відключення
+            currentOutage = {
+              start: `${startH}:${cellType}`,
+              end: `${endH}:00`
+            };
+          } else {
+            // Перевіряємо чи це продовження поточного відключення
+            const prevSlot = scheduleData.timeSlots[idx - 1];
+            const [prevEndH] = prevSlot.time.split('-')[1];
+            
+            if (prevEndH === startH && prevSlot.type === cellType) {
+              // Продовження відключення
+              currentOutage.end = `${endH}:00`;
+            } else {
+              // Новий період відключення
+              outages.push(currentOutage);
+              currentOutage = {
+                start: `${startH}:${cellType}`,
+                end: `${endH}:00`
+              };
+            }
           }
-          endTime = `${endH}:00`;
+          
+          if (idx === scheduleData.timeSlots.length - 1 && currentOutage) {
+            outages.push(currentOutage);
+          }
         });
         
-        if (startTime && endTime) {
-          result += `Відключення: ${startTime}\n`;
-          result += `Увімкнення: ${endTime}\n`;
-        }
+        // Форматуємо результат
+        outages.forEach((outage, idx) => {
+          if (idx === 0) {
+            result += `Відключення: ${outage.start}\nУвімкнення: ${outage.end}\n`;
+          } else {
+            result += `\nВідключення: ${outage.start}\nУвімкнення: ${outage.end}\n`;
+          }
+        });
         
         return result.trim();
       } else {
-        // Навіть якщо таблиця пуста, повертаємо групу
-        console.log('⚠️ Таблиця розкладу порожня, але група є');
-        return `Група: ${scheduleData.group}`;
+        // Таблиця порожня
+        console.log('⚠️ Таблиця розкладу порожня');
+        return `Група: ${scheduleData.group}\n\nВідключення відсутні`;
       }
     }
     
