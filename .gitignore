@@ -5,7 +5,7 @@ yarn.lock
 
 # Data
 data/
-*.json
+last_known_schedule.json
 
 # Logs
 *.log

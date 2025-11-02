@@ -1,0 +1,23 @@
+{
+  "name": "zirka-monitor",
+  "version": "1.0.0",
+  "description": "Автоматичний моніторинг розкладу відключень електроенергії ДТЕК",
+  "main": "monitor.js",
+  "scripts": {
+    "start": "node monitor.js"
+  },
+  "keywords": [
+    "dtek",
+    "monitor",
+    "power-outage",
+    "telegram-bot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^21.6.1",
+    "node-telegram-bot-api": "^0.64.0",
+    "fs-extra": "^11.2.0"
+  }
+}
+
