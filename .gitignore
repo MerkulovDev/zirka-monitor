@@ -19,6 +19,7 @@ yarn-error.log*
 *.swp
 *.swo
 *~
+.history/
 
 # OS files
 .DS_Store
