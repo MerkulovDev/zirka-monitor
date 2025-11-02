@@ -88,16 +88,40 @@ async function waitForIncapsula(page) {
 /**
  * Зробити API запит за розкладом
  */
-async function getScheduleViaAPI(cookies, headers) {
+async function getScheduleViaAPI(page, cookies, headers) {
   try {
     console.log('Спроба отримати розклад через API...');
     
     // Формуємо cookie header
     const cookieStr = cookies.map(c => `${c.name}=${c.value}`).join('; ');
     
-    // CSRF токен з cookies
-    const csrfCookie = cookies.find(c => c.name.includes('csrf'));
-    const csrfToken = csrfCookie ? csrfCookie.value : '';
+    // CSRF токен з HTML сторінки
+    let csrfToken = '';
+    try {
+      csrfToken = await page.evaluate(() => {
+        // Шукаємо в meta тегах
+        const metaToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (metaToken) return metaToken;
+        
+        // Шукаємо в скриптах
+        const scripts = document.querySelectorAll('script');
+        for (let script of scripts) {
+          const text = script.textContent || script.innerText;
+          const match = text.match(/csrf[_-]?token['"]?\s*[:=]\s*['"]([^'"]+)['"]/i);
+          if (match) return match[1];
+        }
+        
+        // Шукаємо в window
+        if (window.csrfToken) return window.csrfToken;
+        if (window.csrf_token) return window.csrf_token;
+        
+        return '';
+      });
+    } catch (e) {
+      console.log('Не вдалося витягти CSRF токен зі сторінки');
+    }
+    
+    console.log(`CSRF токен: ${csrfToken ? 'знайдено' : 'не знайдено'}`);
     
     // Формуємо postData
     const postData = new URLSearchParams({
@@ -346,26 +370,37 @@ async function findShutdownSchedule(page, cookies, headers) {
     console.log('Пошук розкладу для адреси...');
     
     // Спочатку спробуємо через API
-    const apiData = await getScheduleViaAPI(cookies, headers);
-    if (apiData && apiData.result) {
+    const apiData = await getScheduleViaAPI(page, cookies, headers);
+    if (apiData && apiData.result && apiData.data) {
       console.log('✓ Дані отримані з API');
       
-      // Парсимо API відповідь
-      let result = '';
-      if (apiData.result.sub_type_reason && apiData.result.sub_type_reason.length > 0) {
-        result += `Група: ${apiData.result.sub_type_reason[0]}\n`;
+      // Шукаємо дані для будинку 18А
+      const houseData = apiData.data['18А'] || apiData.data['18'] || apiData.data['18АС.2'];
+      if (houseData && houseData.sub_type_reason && houseData.sub_type_reason.length > 0) {
+        // Знаходимо групу з Черга або просто номер
+        let group = houseData.sub_type_reason[0];
+        // Якщо це GPV6.2, то це Черга 6.2
+        if (group.startsWith('GPV')) {
+          const number = group.replace('GPV', '');
+          group = `Черга ${number}`;
+        }
+        
+        let result = `Група: ${group}`;
+        
+        if (houseData.start_date || houseData.end_date) {
+          result += '\n\n';
+          if (houseData.start_date) {
+            result += `Початок: ${houseData.start_date}\n`;
+          }
+          if (houseData.end_date) {
+            result += `Кінець: ${houseData.end_date}\n`;
+          }
+        } else {
+          result += '\n\nВідключення відсутні';
+        }
+        
+        return result.trim();
       }
-      if (apiData.result.start_date) {
-        result += `Початок: ${apiData.result.start_date}\n`;
-      }
-      if (apiData.result.end_date) {
-        result += `Кінець: ${apiData.result.end_date}\n`;
-      }
-      if (apiData.result.type) {
-        result += `Тип: ${apiData.result.type}\n`;
-      }
-      
-      return result.trim() || JSON.stringify(apiData.result);
     }
     
     // Fallback: спробуємо через форму
