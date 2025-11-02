@@ -11,8 +11,14 @@ const CONFIG = {
   CHAT_ID: process.env.TELEGRAM_CHAT_ID || '', // ID чату або каналу
 };
 
-// Telegram бот
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+// Telegram бот (ініціалізуємо тільки якщо є токен)
+const botToken = process.env.TELEGRAM_BOT_TOKEN;
+const bot = botToken ? new TelegramBot(botToken) : null;
+
+// Перевірка конфігурації
+if (!botToken) {
+  console.warn('⚠️ TELEGRAM_BOT_TOKEN не встановлено, сповіщення відправлятись не будуть');
+}
 
 /**
  * Зачекати поки Incapsula завантажиться
@@ -162,6 +168,11 @@ function compareSchedules(oldSchedule, newSchedule) {
  * Відправити сповіщення в Telegram
  */
 async function sendTelegramNotification(message) {
+  if (!bot) {
+    console.log('⚠ Telegram бот не ініціалізовано, сповіщення не відправлено');
+    return;
+  }
+  
   if (!CONFIG.CHAT_ID) {
     console.log('⚠ TELEGRAM_CHAT_ID не налаштовано, сповіщення не відправлено');
     return;
