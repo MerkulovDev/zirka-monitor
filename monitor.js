@@ -506,7 +506,7 @@ function compareSchedules(oldSchedule, newSchedule) {
 /**
  * Відправити сповіщення в Telegram
  */
-async function sendTelegramNotification(message) {
+async function sendTelegramNotification(message, quiet = false) {
   if (!bot) {
     console.log('⚠ Telegram бот не ініціалізовано, сповіщення не відправлено');
     return;
@@ -518,9 +518,17 @@ async function sendTelegramNotification(message) {
   }
   
   try {
-    await bot.sendMessage(CONFIG.CHAT_ID, message, {
+    const options = {
       parse_mode: 'HTML',
-    });
+    };
+    
+    // Якщо тихий режим, додаємо disable_notification
+    if (quiet) {
+      options.disable_notification = true;
+      console.log('🔇 Тихий режим: сповіщення без звуку');
+    }
+    
+    await bot.sendMessage(CONFIG.CHAT_ID, message, options);
     console.log('✓ Сповіщення відправлено в Telegram');
   } catch (error) {
     console.error('Помилка відправки в Telegram:', error.message);
@@ -538,7 +546,7 @@ function formatNotificationMessage(oldSchedule, newSchedule, isFirstRun) {
     message += `📍 <b>Адреса:</b> ${CONFIG.ADDRESS}\n\n`;
     message += `<b>Поточний розклад:</b>\n<pre>${escapeHtml(newSchedule)}</pre>`;
   } else {
-    message = `⚠️ <b>Зміна у розкладі відключень!</b>\n\n`;
+    message = `⚠️ <b>Графік оновлено!</b>\n\n`;
     message += `📍 <b>Адреса:</b> ${CONFIG.ADDRESS}\n\n`;
     message += `<b>Новий розклад:</b>\n<pre>${escapeHtml(newSchedule)}</pre>\n\n`;
     
@@ -565,12 +573,56 @@ function escapeHtml(text) {
 }
 
 /**
+ * Перевірка чи потрібен моніторинг залежно від часу
+ */
+function shouldRunMonitor() {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  
+  // З 00:00 до 06:00 не моніторимо (нічний відпочинок)
+  if (hour >= 0 && hour < 6) {
+    return false;
+  }
+  
+  // З 06:00 до 23:59 моніторимо (з 22:00-06:00 будеть тихий режим)
+  return true;
+}
+
+/**
+ * Чи потрібно відправляти сповіщення безшумно
+ */
+function isQuietHours() {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay(); // 0 = неділя, 6 = субота
+  
+  const isWeekend = day === 0 || day === 6;
+  
+  // У вихідні: до 10 ранку безшумно
+  if (isWeekend) {
+    return hour < 10;
+  }
+  
+  // У будні: з 6 до 7 ранку безшумно
+  return hour >= 6 && hour < 8;
+}
+
+/**
  * Головна функція моніторингу
  */
 async function runMonitor() {
   console.log('\n===== Запуск моніторингу =====');
   console.log(`Адреса: ${CONFIG.ADDRESS}`);
   console.log(`URL: ${CONFIG.URL}`);
+  
+  // Перевірка часу
+  if (!shouldRunMonitor()) {
+    const now = new Date();
+    console.log(`⏰ Нічний режим: моніторинг призупинено до 06:00 (поточний час: ${now.toLocaleTimeString('uk-UA')})`);
+    console.log('Збереження попередніх даних');
+    return;
+  }
   
   let browser = null;
   
@@ -653,13 +705,17 @@ async function runMonitor() {
       if (comparison.changed) {
         console.log('\n📢 Виявлено зміни у розкладі!');
         
-        // Форматуємо та відправляємо сповіщення
-        const message = formatNotificationMessage(
-          oldSchedule,
-          newSchedule,
-          comparison.isFirstRun
-        );
-        await sendTelegramNotification(message);
+        // Форматуємо та відправляємо сповіщення (тільки якщо не перший запуск)
+        if (!comparison.isFirstRun) {
+          const message = formatNotificationMessage(
+            oldSchedule,
+            newSchedule,
+            comparison.isFirstRun
+          );
+          await sendTelegramNotification(message, isQuietHours());
+        } else {
+          console.log('✓ Перший запуск - сповіщення не відправляємо');
+        }
         
         // Зберігаємо новий розклад
         await saveSchedule(newSchedule);
