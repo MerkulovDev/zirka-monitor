@@ -604,8 +604,8 @@ function isQuietHours() {
     return hour < 10;
   }
   
-  // У будні: з 6 до 7 ранку безшумно
-  return hour >= 6 && hour < 8;
+  // У будні: з 6 до 7 ранку безшумно + після 22:00
+  return (hour >= 6 && hour < 8) || hour >= 22;
 }
 
 /**
