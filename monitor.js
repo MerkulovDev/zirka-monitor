@@ -54,6 +54,9 @@ async function findShutdownSchedule(page) {
       return document.body.innerText;
     });
     
+    console.log(`Довжина сторінки: ${pageContent.length} символів`);
+    console.log(`Перші 500 символів: ${pageContent.substring(0, 500)}`);
+    
     // Шукаємо ключові слова навколо номера будинку
     const lines = pageContent.split('\n');
     let scheduleFound = false;
