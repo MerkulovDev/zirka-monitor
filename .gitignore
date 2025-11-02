@@ -4,7 +4,7 @@ package-lock.json
 yarn.lock
 
 # Data
-data/
+# data/ is tracked for history
 last_known_schedule.json
 
 # Logs
