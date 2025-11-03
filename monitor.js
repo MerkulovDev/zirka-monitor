@@ -114,7 +114,14 @@ function getLastKnownState() {
   try {
     if (fs.existsSync(CONFIG.STATE_FILE)) {
       const data = fs.readFileSync(CONFIG.STATE_FILE, 'utf8');
-      return JSON.parse(data);
+      const state = JSON.parse(data);
+      console.log('📂 Прочитано попередній стан:');
+      console.log('  - Update:', state.update);
+      console.log('  - Group:', state.group);
+      console.log('  - Timestamp:', state.timestamp);
+      return state;
+    } else {
+      console.log('📂 Попередній стан не знайдено (перший запуск або файл видалено)');
     }
   } catch (error) {
     console.log('⚠️  Неможливо прочитати попередній стан:', error.message);
@@ -141,12 +148,26 @@ function saveState(state) {
 // Функція для порівняння станів
 function compareStates(oldState, newState) {
   if (!oldState) {
+    console.log('🔍 Порівняння: Немає попереднього стану (перший запуск)');
     return { changed: true, reason: 'Перший запуск' };
   }
 
+  console.log('🔍 Порівняння станів:');
+  console.log('  Старий update:', oldState.update);
+  console.log('  Новий update:', newState.update);
+  console.log('  Стара група:', oldState.group);
+  console.log('  Нова група:', newState.group);
+
   // Порівнюємо update timestamp
   if (oldState.update !== newState.update) {
+    console.log('⚠️  Змінився update timestamp!');
     return { changed: true, reason: `Оновлено з ${oldState.update} на ${newState.update}` };
+  }
+
+  // Порівнюємо групи
+  if (oldState.group !== newState.group) {
+    console.log('⚠️  Змінилася група!');
+    return { changed: true, reason: `Група змінилась з ${oldState.group} на ${newState.group}` };
   }
 
   // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
@@ -154,9 +175,24 @@ function compareStates(oldState, newState) {
   const newScheduleJson = JSON.stringify(newState.fullSchedule || {});
   
   if (oldScheduleJson !== newScheduleJson) {
+    console.log('⚠️  Графіки відрізняються!');
+    // Знаходимо різницю для логування
+    const oldSchedule = oldState.fullSchedule || {};
+    const newSchedule = newState.fullSchedule || {};
+    const differences = [];
+    for (let hour = 1; hour <= 24; hour++) {
+      const h = String(hour);
+      if (oldSchedule[h] !== newSchedule[h]) {
+        differences.push(`Година ${h}: "${oldSchedule[h]}" → "${newSchedule[h]}"`);
+      }
+    }
+    if (differences.length > 0) {
+      console.log('  Різниці:', differences.join(', '));
+    }
     return { changed: true, reason: 'Змінився графік відключень' };
   }
 
+  console.log('✅ Графіки ідентичні');
   return { changed: false, reason: 'Змін немає' };
 }
 

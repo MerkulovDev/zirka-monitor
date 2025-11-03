@@ -34,17 +34,22 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node monitor.js
       
-      - name: Commit and push if data changed
+      - name: Commit and push state file
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          if [ -n "$(git status --porcelain)" ]; then
-            git add data/
-            git commit -m "Auto-update: Monitor data $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-            git push || echo "Nothing to push"
+          # Завжди комітимо файл стану, якщо він змінився
+          if [ -f data/last_known_schedule.json ]; then
+            git add data/last_known_schedule.json
+            if [ -n "$(git status --porcelain data/)" ]; then
+              git commit -m "Update: Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+              git push || echo "Nothing to push"
+            else
+              echo "State file unchanged"
+            fi
           else
-            echo "No changes to commit"
+            echo "State file not found"
           fi
 
