@@ -254,8 +254,6 @@ async function monitor() {
     
     console.log('✅ Графік отримано (оновлено:', factData.update + ')');
     
-    console.log('✅ Графік отримано (оновлено:', factData.update + ')');
-    
     // Крок 2: Отримуємо CSRF токен
     const csrfToken = await page.evaluate(() => {
       const metaTag = document.querySelector('meta[name="csrf-token"]');
