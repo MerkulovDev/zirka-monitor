@@ -7,8 +7,8 @@ const path = require('path');
 const CONFIG = {
   URL: 'https://www.dtek-krem.com.ua/ua/shutdowns',
   ADDRESS_CITY: 'м. Вишгород',
-  ADDRESS_STREET: 'вул. Кургузова',
-  ADDRESS_HOUSE: '1А',
+  ADDRESS_STREET: 'вул. Шолуденка',
+  ADDRESS_HOUSE: '18А',
   STATE_FILE: path.join(__dirname, 'data', 'last_known_schedule.json'),
 };
 
