@@ -9,6 +9,8 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
@@ -34,8 +36,6 @@ jobs:
       
       - name: Commit and push if data changed
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-        permissions:
-          contents: write
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
