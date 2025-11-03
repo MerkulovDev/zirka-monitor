@@ -221,7 +221,8 @@ async function monitor() {
       timeout: 60000
     });
     
-    await page.waitForTimeout(5000);
+    // Чекаємо 5 секунд для завантаження контенту
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     // Крок 1: Витягуємо DisconSchedule.fact
     console.log('🔍 Витягуємо графік відключень...');
