@@ -149,22 +149,12 @@ function compareStates(oldState, newState) {
     return { changed: true, reason: `Оновлено з ${oldState.update} на ${newState.update}` };
   }
 
-  // Порівнюємо графік для групи
-  const oldSchedule = oldState.schedule || [];
-  const newSchedule = newState.schedule || [];
-
-  if (oldSchedule.length !== newSchedule.length) {
-    return { changed: true, reason: 'Змінився кількість періодів відключення' };
-  }
-
-  // Порівнюємо кожен період
-  for (let i = 0; i < newSchedule.length; i++) {
-    const oldItem = oldSchedule[i];
-    const newItem = newSchedule[i];
-
-    if (!oldItem || oldItem.range !== newItem.range || oldItem.value !== newItem.value) {
-      return { changed: true, reason: `Змінився період ${newItem.range}` };
-    }
+  // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
+  const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
+  const newScheduleJson = JSON.stringify(newState.fullSchedule || {});
+  
+  if (oldScheduleJson !== newScheduleJson) {
+    return { changed: true, reason: 'Змінився графік відключень' };
   }
 
   return { changed: false, reason: 'Змін немає' };
@@ -329,7 +319,13 @@ async function monitor() {
     
     const groupSchedule = factData.data[firstDayKey][group];
     
-    // Формуємо детальний графік
+    // Зберігаємо повний графік (всі 24 години) для порівняння
+    const fullSchedule = {};
+    for (let hour = 1; hour <= 24; hour++) {
+      fullSchedule[String(hour)] = groupSchedule[String(hour)] || 'yes';
+    }
+    
+    // Формуємо детальний графік для відображення (тільки відключення)
     const schedule = [];
     for (let hour = 1; hour <= 24; hour++) {
       const value = groupSchedule[String(hour)];
@@ -345,11 +341,12 @@ async function monitor() {
     
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
     
-    // Формуємо поточний стан
+    // Формуємо поточний стан з повним графіком
     const currentState = {
       update: factData.update,
       group: group,
-      schedule: schedule,
+      fullSchedule: fullSchedule, // Повний об'єкт з усіма 24 годинами
+      schedule: schedule, // Тільки для відображення
       timestamp: new Date().toISOString()
     };
     
