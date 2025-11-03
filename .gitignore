@@ -3,8 +3,7 @@ node_modules/
 yarn.lock
 
 # Data
-# data/ is tracked for history
-data/last_known_schedule.json
+# data/last_known_schedule.json is tracked to preserve state between workflow runs
 discon_fact.json
 
 # Logs
