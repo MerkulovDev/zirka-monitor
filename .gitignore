@@ -4,7 +4,8 @@ yarn.lock
 
 # Data
 # data/ is tracked for history
-last_known_schedule.json
+data/last_known_schedule.json
+discon_fact.json
 
 # Logs
 *.log
