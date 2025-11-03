@@ -1,6 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs-extra');
 const path = require('path');
+const crypto = require('crypto');
 const browser = require('./browser');
 const parser = require('./parser');
 const api = require('./api');
@@ -42,42 +43,88 @@ async function saveSchedule(tablesHtml) {
 }
 
 /**
- * Завантажити останній розклад
+ * Завантажити останній розклад (хеші скріншотів)
  */
 async function loadLastSchedule() {
   try {
     const data = await fs.readJson(CONFIG.DATA_FILE);
-    return data.tables || null;
+    // Можемо мати старі дані як HTML, тому перевіряємо
+    if (data.tables) {
+      // Якщо це JSON з хешами, повертаємо
+      try {
+        JSON.parse(data.tables);
+        return data.tables;
+      } catch {
+        // Старий формат (HTML), повертаємо null щоб відправити нові скріншоти
+        return null;
+      }
+    }
+    return null;
   } catch (error) {
-    console.log('Початковий запуск');
+    console.log('Початковий запуск - немає збережених даних');
     return null;
   }
 }
 
 /**
- * Порівняти розклади
+ * Обчислити хеш скріншоту
  */
-function compareSchedules(oldTables, newTables) {
-  if (!oldTables) {
-    return { changed: true, isFirstRun: true };
-  }
-  
-  // Порівнюємо HTML контент
-  const normalize = (html) => html ? html.replace(/\s+/g, ' ').trim().toLowerCase() : '';
-  const oldNormalized = normalize(oldTables);
-  const newNormalized = normalize(newTables);
-  
-  const changed = oldNormalized !== newNormalized;
-  
-  if (changed) {
-    console.log('🔍 Виявлено зміни в таблицях');
-  }
-  
-  return { changed, isFirstRun: false };
+function hashScreenshot(screenshot) {
+  if (!screenshot) return null;
+  return crypto.createHash('sha256').update(screenshot).digest('hex');
 }
 
 /**
- * Відправити Telegram сповіщення
+ * Порівняти скріншоти на зміни
+ */
+function compareScreenshots(oldScreenshots, newScreenshots) {
+  if (!oldScreenshots) {
+    return { changed: true, isFirstRun: true };
+  }
+  
+  try {
+    const oldData = typeof oldScreenshots === 'string' ? JSON.parse(oldScreenshots) : oldScreenshots;
+    
+    const oldHashes = {
+      factInfo: oldData.factInfo || null,
+      factTables: oldData.factTables || null,
+      scheduleTable: oldData.scheduleTable || null,
+    };
+    
+    const newHashes = {
+      factInfo: hashScreenshot(newScreenshots.factInfo),
+      factTables: hashScreenshot(newScreenshots.factTables),
+      scheduleTable: hashScreenshot(newScreenshots.scheduleTable),
+    };
+    
+    // Порівнюємо хеші
+    const changed = 
+      oldHashes.factInfo !== newHashes.factInfo ||
+      oldHashes.factTables !== newHashes.factTables ||
+      oldHashes.scheduleTable !== newHashes.scheduleTable;
+    
+    if (changed) {
+      console.log('🔍 Виявлено зміни в скріншотах:');
+      if (oldHashes.factInfo !== newHashes.factInfo) {
+        console.log('  - factInfo змінився');
+      }
+      if (oldHashes.factTables !== newHashes.factTables) {
+        console.log('  - factTables змінився');
+      }
+      if (oldHashes.scheduleTable !== newHashes.scheduleTable) {
+        console.log('  - scheduleTable змінився');
+      }
+    }
+    
+    return { changed, isFirstRun: false };
+  } catch (error) {
+    console.log('⚠️ Помилка порівняння, вважаємо що є зміни');
+    return { changed: true, isFirstRun: false };
+  }
+}
+
+/**
+ * Відправити Telegram сповіщення (текст)
  */
 async function sendTelegramNotification(message, quiet = false) {
   if (!bot || !CONFIG.CHAT_ID) {
@@ -123,6 +170,64 @@ async function sendTelegramNotification(message, quiet = false) {
     
     console.log(quiet ? '🔇 Тихий режим' : '🔊 Гучний режим');
     console.log('✓ Відправлено в Telegram');
+  } catch (error) {
+    console.error('Помилка Telegram:', error.message);
+  }
+}
+
+/**
+ * Відправити Telegram сповіщення зі скріншотами
+ */
+async function sendTelegramNotificationWithScreenshots(screenshots, address, quiet = false) {
+  if (!bot || !CONFIG.CHAT_ID) {
+    console.log('⚠️ Telegram не налаштовано');
+    return;
+  }
+  
+  try {
+    const options = {
+      disable_notification: quiet,
+    };
+    
+    // Відправляємо заголовок
+    const caption = `⚠️ <b>Графік оновлено!</b>\n\n📍 <b>Адреса:</b> ${address}`;
+    
+    // Відправляємо скріншоти
+    const screenshotsToSend = [];
+    if (screenshots.factInfo) {
+      screenshotsToSend.push({ buffer: screenshots.factInfo, caption: '📋 Інформація про відключення' });
+    }
+    if (screenshots.factTables) {
+      screenshotsToSend.push({ buffer: screenshots.factTables, caption: '📊 Таблиця відключень' });
+    }
+    if (screenshots.scheduleTable) {
+      screenshotsToSend.push({ buffer: screenshots.scheduleTable, caption: '📅 Графік можливих відключень' });
+    }
+    
+    if (screenshotsToSend.length === 0) {
+      console.log('⚠️ Немає скріншотів для відправки');
+      return;
+    }
+    
+    // Спочатку відправляємо текстове повідомлення
+    await bot.sendMessage(CONFIG.CHAT_ID, caption, { parse_mode: 'HTML', disable_notification: quiet });
+    
+    // Потім відправляємо скріншоти
+    for (let i = 0; i < screenshotsToSend.length; i++) {
+      const screenshot = screenshotsToSend[i];
+      await bot.sendPhoto(CONFIG.CHAT_ID, screenshot.buffer, {
+        caption: screenshot.caption,
+        ...options
+      });
+      
+      // Невелика затримка між повідомленнями
+      if (i < screenshotsToSend.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    console.log(quiet ? '🔇 Тихий режим' : '🔊 Гучний режим');
+    console.log(`✓ Відправлено ${screenshotsToSend.length} скріншотів в Telegram`);
   } catch (error) {
     console.error('Помилка Telegram:', error.message);
   }
@@ -198,34 +303,48 @@ async function runMonitorPage() {
     console.log('⏳ Очікування завантаження таблиць...');
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Парсимо таблиці зі сторінки
-    const tables = await parser.parsePageTables(page);
+    // Створюємо скріншоти таблиць
+    console.log('📸 Створення скріншотів таблиць...');
+    const screenshots = await parser.takeTableScreenshots(page);
     
-    if (!tables || (!tables.factInfo && !tables.factTables && !tables.scheduleTable)) {
-      console.log('❌ Таблиці не знайдено');
+    if (!screenshots.factInfo && !screenshots.factTables && !screenshots.scheduleTable) {
+      console.log('❌ Скріншоти не створено');
       return;
     }
     
-    // Формуємо HTML для збереження
-    const tablesHtml = parser.formatTablesForTelegram(tables);
-    
-    console.log('\n📋 Отримано таблиці:');
-    console.log(`  Розмір контенту: ${tablesHtml ? tablesHtml.length : 0} символів`);
+    console.log('\n📸 Скріншоти створено:');
+    console.log(`  - factInfo: ${screenshots.factInfo ? '✓' : '✗'}`);
+    console.log(`  - factTables: ${screenshots.factTables ? '✓' : '✗'}`);
+    console.log(`  - scheduleTable: ${screenshots.scheduleTable ? '✓' : '✗'}`);
     
     await browserInstance.close();
     browserInstance = null;
     
+    // Обчислюємо хеші скріншотів для порівняння
+    const screenshotsHashes = {
+      factInfo: hashScreenshot(screenshots.factInfo),
+      factTables: hashScreenshot(screenshots.factTables),
+      scheduleTable: hashScreenshot(screenshots.scheduleTable),
+    };
+    
+    console.log('\n🔐 Хеші скріншотів:');
+    console.log(`  - factInfo: ${screenshotsHashes.factInfo ? screenshotsHashes.factInfo.substring(0, 16) + '...' : 'немає'}`);
+    console.log(`  - factTables: ${screenshotsHashes.factTables ? screenshotsHashes.factTables.substring(0, 16) + '...' : 'немає'}`);
+    console.log(`  - scheduleTable: ${screenshotsHashes.scheduleTable ? screenshotsHashes.scheduleTable.substring(0, 16) + '...' : 'немає'}`);
+    
     // Порівнюємо з попереднім розкладом
-    const comparison = compareSchedules(oldTables, tablesHtml);
+    const comparison = compareScreenshots(oldTables, screenshots);
     
     if (comparison.changed) {
-      await saveSchedule(tablesHtml);
+      // Зберігаємо тільки хеші для порівняння (не самі скріншоти)
+      const screenshotsDataStr = JSON.stringify(screenshotsHashes);
+      await saveSchedule(screenshotsDataStr);
       
-      const message = formatNotificationMessage(tables, CONFIG.ADDRESS);
+      console.log('\n📤 Відправка скріншотів в Telegram...');
       const quiet = isQuietHours();
-      await sendTelegramNotification(message, quiet);
+      await sendTelegramNotificationWithScreenshots(screenshots, CONFIG.ADDRESS, quiet);
     } else {
-      console.log('✓ Змін не виявлено');
+      console.log('\n✓ Змін не виявлено - скріншоти ідентичні');
     }
     
   } catch (error) {

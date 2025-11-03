@@ -1,4 +1,53 @@
 /**
+ * Створити скріншот елемента
+ */
+async function takeScreenshot(page, selector, options = {}) {
+  try {
+    const element = await page.$(selector);
+    if (!element) {
+      console.log(`✗ Елемент ${selector} не знайдено для скріншоту`);
+      return null;
+    }
+    
+    const screenshot = await element.screenshot({
+      type: 'png',
+      ...options
+    });
+    
+    console.log(`✓ Скріншот створено: ${selector}`);
+    return screenshot;
+  } catch (error) {
+    console.error(`Помилка створення скріншоту для ${selector}:`, error.message);
+    return null;
+  }
+}
+
+/**
+ * Створити скріншоти всіх таблиць
+ */
+async function takeTableScreenshots(page) {
+  const screenshots = {
+    factInfo: null,
+    factTables: null,
+    scheduleTable: null,
+  };
+  
+  if (await page.$('.discon-fact-info')) {
+    screenshots.factInfo = await takeScreenshot(page, '.discon-fact-info');
+  }
+  
+  if (await page.$('.discon-fact-tables')) {
+    screenshots.factTables = await takeScreenshot(page, '.discon-fact-tables');
+  }
+  
+  if (await page.$('.discon-schedule-table.active')) {
+    screenshots.scheduleTable = await takeScreenshot(page, '.discon-schedule-table.active');
+  }
+  
+  return screenshots;
+}
+
+/**
  * Парсинг HTML таблиць зі сторінки
  */
 async function parsePageTables(page) {
@@ -157,17 +206,110 @@ async function parsePageTables(page) {
 }
 
 /**
- * Очистити HTML від небезпечних тегів та атрибутів для Telegram
+ * Парсити HTML таблицю в структурований текст
  */
-function sanitizeHtml(html) {
-  if (!html) return '';
-  
-  // Telegram підтримує тільки обмежений набір HTML тегів
-  // Видаляємо скрипти та стилі, залишаємо базову структуру
-  return html
+function parseTable(html) {
+  // Видаляємо скрипти та стилі
+  let cleanHtml = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, ''); // Видаляємо event handlers
+    .replace(/on\w+="[^"]*"/gi, '');
+  
+  // Витягуємо текст з клітинок таблиці
+  const rows = [];
+  const rowMatches = cleanHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  
+  for (const rowMatch of rowMatches) {
+    const rowHtml = rowMatch[1];
+    const cells = [];
+    
+    // Отримуємо всі клітинки (th або td)
+    const cellMatches = rowHtml.matchAll(/<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi);
+    
+    for (const cellMatch of cellMatches) {
+      let cellText = cellMatch[1]
+        .replace(/<[^>]+>/g, '') // Видаляємо всі HTML теги
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+      
+      cells.push(cellText);
+    }
+    
+    if (cells.length > 0) {
+      rows.push(cells);
+    }
+  }
+  
+  if (rows.length === 0) return '';
+  
+  // Знаходимо максимальну ширину кожної колонки
+  const colWidths = [];
+  rows.forEach(row => {
+    row.forEach((cell, colIndex) => {
+      const width = cell.length;
+      if (!colWidths[colIndex] || colWidths[colIndex] < width) {
+        colWidths[colIndex] = Math.min(width, 40); // Обмежуємо до 40 символів
+      }
+    });
+  });
+  
+  // Формуємо таблицю
+  let tableText = '';
+  rows.forEach((row, rowIndex) => {
+    const formattedRow = row.map((cell, colIndex) => {
+      const width = colWidths[colIndex] || 10;
+      // Обрізаємо довгі клітинки
+      const cellValue = cell.length > width ? cell.substring(0, width - 3) + '...' : cell;
+      return cellValue.padEnd(width);
+    }).join(' │ ');
+    
+    tableText += '│ ' + formattedRow + ' │\n';
+    
+    // Додаємо роздільник після заголовку
+    if (rowIndex === 0 && rows.length > 1) {
+      const separator = colWidths.map(width => '─'.repeat(width)).join('─┼─');
+      tableText += '├─' + separator + '─┤\n';
+    }
+  });
+  
+  return tableText;
+}
+
+/**
+ * Конвертувати HTML в текстовий формат для Telegram
+ */
+function htmlToText(html) {
+  if (!html) return '';
+  
+  // Спочатку обробляємо таблиці
+  let text = html;
+  
+  // Замінюємо таблиці на відформатований текст
+  const tableMatches = text.matchAll(/<table[^>]*>([\s\S]*?)<\/table>/gi);
+  for (const match of tableMatches) {
+    const tableHtml = match[0];
+    const formattedTable = parseTable(tableHtml);
+    text = text.replace(tableHtml, formattedTable ? '\n' + formattedTable + '\n' : '');
+  }
+  
+  // Видаляємо всі інші HTML теги, але зберігаємо текст
+  text = text
+    .replace(/<[^>]+>/g, '') // Видаляємо всі HTML теги
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Видаляємо зайві порожні рядки
+    .trim();
+  
+  return text;
 }
 
 /**
@@ -180,17 +322,26 @@ function formatTablesForTelegram(tables) {
   
   if (tables.factInfo) {
     message += '<b>📋 Інформація про відключення:</b>\n\n';
-    message += sanitizeHtml(tables.factInfo) + '\n\n';
+    const factInfoText = htmlToText(tables.factInfo);
+    message += '<pre>' + factInfoText + '</pre>\n\n';
   }
   
   if (tables.factTables) {
     message += '<b>📊 Таблиця відключень:</b>\n\n';
-    message += sanitizeHtml(tables.factTables) + '\n\n';
+    const factTablesText = htmlToText(tables.factTables);
+    message += '<pre>' + factTablesText + '</pre>\n\n';
   }
   
   if (tables.scheduleTable) {
     message += '<b>📅 Графік можливих відключень:</b>\n\n';
-    message += sanitizeHtml(tables.scheduleTable);
+    const scheduleText = htmlToText(tables.scheduleTable);
+    // Якщо текст занадто довгий, обмежуємо його
+    const maxLength = 3500; // Залишаємо місце для заголовків
+    if (scheduleText.length > maxLength) {
+      message += '<pre>' + scheduleText.substring(0, maxLength) + '...\n\n(повідомлення обрізано)</pre>';
+    } else {
+      message += '<pre>' + scheduleText + '</pre>';
+    }
   }
   
   return message.trim() || null;
@@ -199,5 +350,7 @@ function formatTablesForTelegram(tables) {
 module.exports = {
   parsePageTables,
   formatTablesForTelegram,
+  takeScreenshot,
+  takeTableScreenshots,
 };
 
