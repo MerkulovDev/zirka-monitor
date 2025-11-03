@@ -4,7 +4,9 @@
   "description": "Автоматичний моніторинг розкладу відключень електроенергії ДТЕК",
   "main": "monitor.js",
   "scripts": {
-    "start": "node monitor.js"
+    "start": "node monitor.js",
+    "monitor:page": "node monitor.js page",
+    "monitor:api": "node monitor.js api"
   },
   "keywords": [
     "dtek",
