@@ -47,8 +47,8 @@ function canSendMessage() {
 
 // Функція для відправки повідомлення в Telegram
 async function sendTelegramMessage(message, silent = false) {
-  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.CHAT_ID) {
-    console.log('⚠️  Telegram не налаштовано (відсутні TELEGRAM_BOT_TOKEN або CHAT_ID)');
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+    console.log('⚠️  Telegram не налаштовано (відсутні TELEGRAM_BOT_TOKEN або TELEGRAM_CHAT_ID)');
     return false;
   }
 
@@ -67,7 +67,7 @@ async function sendTelegramMessage(message, silent = false) {
   try {
     const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
     const response = await axios.post(url, {
-      chat_id: process.env.CHAT_ID,
+      chat_id: process.env.TELEGRAM_CHAT_ID,
       text: message,
       parse_mode: 'HTML',
       disable_notification: sendStatus.silent || silent,
@@ -203,7 +203,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
     
     browser = await puppeteer.launch({
-      headless: true,
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -376,7 +376,7 @@ async function monitor() {
     }
     
     // Відправляємо помилку в Telegram
-    if (process.env.TELEGRAM_BOT_TOKEN && process.env.CHAT_ID) {
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
       await sendTelegramMessage(`❌ <b>Помилка моніторингу</b>\n\n${error.message}`);
     }
     

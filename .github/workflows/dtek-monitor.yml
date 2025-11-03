@@ -29,11 +29,13 @@ jobs:
       - name: Run monitor script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: node monitor.js
       
       - name: Commit and push if data changed
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        permissions:
+          contents: write
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -41,9 +43,8 @@ jobs:
           if [ -n "$(git status --porcelain)" ]; then
             git add data/
             git commit -m "Auto-update: Monitor data $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+            git push || echo "Nothing to push"
+          else
+            echo "No changes to commit"
           fi
-          
-          git push || echo "Nothing to push"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
