@@ -214,21 +214,45 @@ async function monitor() {
       timeout: 60000
     });
     
-    // Чекаємо 5 секунд для завантаження контенту
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Чекаємо, поки DisconSchedule.fact завантажиться
+    console.log('⏳ Чекаємо завантаження DisconSchedule.fact...');
+    let factData = null;
+    let retries = 0;
+    const maxRetries = 10;
     
-    // Крок 1: Витягуємо DisconSchedule.fact
-    console.log('🔍 Витягуємо графік відключень...');
-    const factData = await page.evaluate(() => {
-      if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
-        return DisconSchedule.fact;
+    while (!factData && retries < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Чекаємо 2 секунди між спробами
+      
+      factData = await page.evaluate(() => {
+        if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
+          return DisconSchedule.fact;
+        }
+        return null;
+      });
+      
+      retries++;
+      if (!factData) {
+        console.log(`⏳ Спроба ${retries}/${maxRetries}...`);
       }
-      return null;
-    });
+    }
     
     if (!factData) {
-      throw new Error('Не вдалося витягти DisconSchedule.fact');
+      // Остання спроба після довшого очікування
+      console.log('⏳ Остання спроба після 10 секунд...');
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      factData = await page.evaluate(() => {
+        if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
+          return DisconSchedule.fact;
+        }
+        return null;
+      });
     }
+    
+    if (!factData) {
+      throw new Error('Не вдалося витягти DisconSchedule.fact після очікування');
+    }
+    
+    console.log('✅ Графік отримано (оновлено:', factData.update + ')');
     
     console.log('✅ Графік отримано (оновлено:', factData.update + ')');
     
