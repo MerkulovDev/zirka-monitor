@@ -89,9 +89,12 @@ async function sendTelegramMessage(message, silent = false) {
 
 // Функція для форматування графіку відключень
 function formatScheduleMessage(group, scheduleData, updateTime) {
+  // Прибираємо префікс "GPV" з назви групи
+  const groupDisplay = group.replace(/^GPV/, '');
+  
   let message = `<b>🔌 Оновлення графіку відключень</b>\n\n`;
   message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
-  message += `⚡ Група: <b>${group}</b>\n`;
+  message += `⚡ Група: <b>${groupDisplay}</b>\n`;
   message += `🕐 Оновлено: ${updateTime}\n\n`;
 
   if (!scheduleData || scheduleData.length === 0) {
