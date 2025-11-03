@@ -1,11 +1,9 @@
 name: DTEK Monitor (Парсинг сторінки)
 
 on:
-  schedule:
-    # Кожну годину
-    - cron: '0 * * * *'
+  # Вимкнено - використовується dtek-monitor.yml
   workflow_dispatch:
-    # Дозволяє запуск вручну
+    # Можна запустити вручну, але не рекомендовано
 
 jobs:
   monitor:
