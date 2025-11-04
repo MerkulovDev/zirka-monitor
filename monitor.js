@@ -153,16 +153,10 @@ function compareStates(oldState, newState) {
   }
 
   console.log('🔍 Порівняння станів:');
-  console.log('  Старий update:', oldState.update);
-  console.log('  Новий update:', newState.update);
   console.log('  Стара група:', oldState.group);
   console.log('  Нова група:', newState.group);
-
-  // Порівнюємо update timestamp
-  if (oldState.update !== newState.update) {
-    console.log('⚠️  Змінився update timestamp!');
-    return { changed: true, reason: `Оновлено з ${oldState.update} на ${newState.update}` };
-  }
+  console.log('  Старий update:', oldState.update);
+  console.log('  Новий update:', newState.update, '(не враховується при порівнянні)');
 
   // Порівнюємо групи
   if (oldState.group !== newState.group) {
