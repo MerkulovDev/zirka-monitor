@@ -250,21 +250,38 @@ async function monitor() {
       timeout: 60000
     });
     
+    // Чекаємо додатково, щоб Incapsula встигла пройти перевірку
+    console.log('⏳ Чекаємо стабілізації сторінки (10 секунд)...');
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    
     // Чекаємо, поки DisconSchedule.fact завантажиться
     console.log('⏳ Чекаємо завантаження DisconSchedule.fact...');
     let factData = null;
     let retries = 0;
-    const maxRetries = 10;
+    const maxRetries = 15;
     
     while (!factData && retries < maxRetries) {
       await new Promise(resolve => setTimeout(resolve, 2000)); // Чекаємо 2 секунди між спробами
       
-      factData = await page.evaluate(() => {
-        if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
-          return DisconSchedule.fact;
+      try {
+        factData = await page.evaluate(() => {
+          if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
+            return DisconSchedule.fact;
+          }
+          return null;
+        });
+      } catch (error) {
+        console.log(`⚠️  Помилка при спробі ${retries + 1}: ${error.message}`);
+        // Якщо контекст знищений, спробуємо перезавантажити сторінку
+        if (error.message.includes('context was destroyed') || error.message.includes('navigation')) {
+          console.log('🔄 Перезавантажуємо сторінку...');
+          await page.goto(CONFIG.URL, {
+            waitUntil: 'networkidle0',
+            timeout: 60000
+          });
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
-        return null;
-      });
+      }
       
       retries++;
       if (!factData) {
@@ -276,12 +293,16 @@ async function monitor() {
       // Остання спроба після довшого очікування
       console.log('⏳ Остання спроба після 10 секунд...');
       await new Promise(resolve => setTimeout(resolve, 10000));
-      factData = await page.evaluate(() => {
-        if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
-          return DisconSchedule.fact;
-        }
-        return null;
-      });
+      try {
+        factData = await page.evaluate(() => {
+          if (typeof DisconSchedule !== 'undefined' && DisconSchedule.fact) {
+            return DisconSchedule.fact;
+          }
+          return null;
+        });
+      } catch (error) {
+        console.error('❌ Помилка в останній спробі:', error.message);
+      }
     }
     
     if (!factData) {
