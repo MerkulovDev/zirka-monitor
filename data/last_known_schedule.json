@@ -11,10 +11,10 @@
     "7": "yes",
     "8": "yes",
     "9": "yes",
-    "10": "yes",
-    "11": "yes",
-    "12": "yes",
-    "13": "yes",
+    "10": "no",
+    "11": "no",
+    "12": "no",
+    "13": "first",
     "14": "yes",
     "15": "yes",
     "16": "yes",
@@ -27,7 +27,32 @@
     "23": "yes",
     "24": "yes"
   },
-  "schedule": [],
-  "timestamp": "2025-11-04T21:15:47.873Z",
+  "schedule": [
+    {
+      "hour": 10,
+      "range": "09:00-10:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 11,
+      "range": "10:00-11:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 12,
+      "range": "11:00-12:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 13,
+      "range": "12:00-13:00",
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 12:00 до 12:30"
+    }
+  ],
+  "timestamp": "2025-11-04T22:15:39.594Z",
   "lastMessageIn6to8": false
 }
