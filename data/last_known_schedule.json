@@ -1,5 +1,5 @@
 {
-  "update": "04.11.2025 18:33",
+  "update": "04.11.2025 20:27",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -28,6 +28,6 @@
     "24": "yes"
   },
   "schedule": [],
-  "timestamp": "2025-11-04T18:24:50.736Z",
+  "timestamp": "2025-11-04T19:14:03.362Z",
   "lastMessageIn6to8": false
 }
