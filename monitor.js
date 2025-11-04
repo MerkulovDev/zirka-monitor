@@ -154,15 +154,10 @@ function compareStates(oldState, newState) {
 
   console.log('🔍 Порівняння станів:');
   console.log('  Стара група:', oldState.group);
-  console.log('  Нова група:', newState.group);
+  console.log('  Нова група:', newState.group, oldState.group !== newState.group ? '(змінилася, але не враховується)' : '');
   console.log('  Старий update:', oldState.update);
   console.log('  Новий update:', newState.update, '(не враховується при порівнянні)');
-
-  // Порівнюємо групи
-  if (oldState.group !== newState.group) {
-    console.log('⚠️  Змінилася група!');
-    return { changed: true, reason: `Група змінилась з ${oldState.group} на ${newState.group}` };
-  }
+  console.log('  Порівнюємо тільки графік відключень (fullSchedule)');
 
   // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
   const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
