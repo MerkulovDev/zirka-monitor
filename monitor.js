@@ -88,11 +88,11 @@ async function sendTelegramMessage(message, silent = false) {
 }
 
 // Функція для форматування графіку відключень
-function formatScheduleMessage(group, scheduleData, updateTime) {
+function formatScheduleMessage(title, group, scheduleData, updateTime) {
   // Прибираємо префікс "GPV" з назви групи
   const groupDisplay = group.replace(/^GPV/, '');
   
-  let message = `<b>🔌 Оновлення графіку відключень</b>\n\n`;
+  let message = `<b>${title}</b>\n\n`;
   message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
   message += `⚡ Група: <b>${groupDisplay}</b>\n`;
   message += `🕐 Оновлено: ${updateTime}\n\n`;
@@ -149,21 +149,31 @@ function saveState(state) {
 function compareStates(oldState, newState) {
   if (!oldState) {
     console.log('🔍 Порівняння: Немає попереднього стану (перший запуск)');
-    return { changed: true, reason: 'Перший запуск' };
+    return { 
+      changed: true, 
+      groupChanged: false, 
+      scheduleChanged: true, 
+      reason: 'Перший запуск' 
+    };
   }
 
   console.log('🔍 Порівняння станів:');
   console.log('  Стара група:', oldState.group);
-  console.log('  Нова група:', newState.group, oldState.group !== newState.group ? '(змінилася, але не враховується)' : '');
-  console.log('  Старий update:', oldState.update);
-  console.log('  Новий update:', newState.update, '(не враховується при порівнянні)');
-  console.log('  Порівнюємо тільки графік відключень (fullSchedule)');
-
+  console.log('  Нова група:', newState.group);
+  
+  // Перевіряємо зміну групи
+  const groupChanged = oldState.group !== newState.group;
+  
   // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
   const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
   const newScheduleJson = JSON.stringify(newState.fullSchedule || {});
+  const scheduleChanged = oldScheduleJson !== newScheduleJson;
   
-  if (oldScheduleJson !== newScheduleJson) {
+  if (groupChanged) {
+    console.log('⚠️  Група змінилась!');
+  }
+  
+  if (scheduleChanged) {
     console.log('⚠️  Графіки відрізняються!');
     // Знаходимо різницю для логування
     const oldSchedule = oldState.fullSchedule || {};
@@ -178,11 +188,36 @@ function compareStates(oldState, newState) {
     if (differences.length > 0) {
       console.log('  Різниці:', differences.join(', '));
     }
-    return { changed: true, reason: 'Змінився графік відключень' };
   }
 
-  console.log('✅ Графіки ідентичні');
-  return { changed: false, reason: 'Змін немає' };
+  if (!groupChanged && !scheduleChanged) {
+    console.log('✅ Ні група, ні графік не змінилися');
+    return { 
+      changed: false, 
+      groupChanged: false, 
+      scheduleChanged: false, 
+      reason: 'Змін немає' 
+    };
+  }
+
+  // Визначаємо заголовок повідомлення
+  let title = '';
+  if (groupChanged && scheduleChanged) {
+    title = '🔌 Оновлено графік і змінено групу';
+  } else if (groupChanged) {
+    title = '🔌 Група змінена';
+  } else {
+    title = '🔌 Графік оновлено';
+  }
+
+  return { 
+    changed: true, 
+    groupChanged, 
+    scheduleChanged, 
+    title,
+    reason: groupChanged && scheduleChanged ? 'Змінилась група і графік' : 
+            groupChanged ? 'Змінилась група' : 'Змінився графік відключень' 
+  };
 }
 
 // Функції для обробки графіку
@@ -409,31 +444,79 @@ async function monitor() {
     
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
     
-    // Формуємо поточний стан з повним графіком
-    const currentState = {
-      update: factData.update,
-      group: group,
-      fullSchedule: fullSchedule, // Повний об'єкт з усіма 24 годинами
-      schedule: schedule, // Тільки для відображення
-      timestamp: new Date().toISOString()
-    };
+    // Визначаємо чи є ранкове повідомлення (о 8:00)
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    const isMorningReport = hour === 8 && minutes < 10; // О 8:00-8:10
     
     // Порівнюємо з попереднім станом
     const lastState = getLastKnownState();
-    const comparison = compareStates(lastState, currentState);
+    const comparison = compareStates(lastState, {
+      update: factData.update,
+      group: group,
+      fullSchedule: fullSchedule
+    });
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
     
-    if (comparison.changed) {
-      console.log('📢 Виявлено зміни! Відправляємо повідомлення...');
+    // Перевіряємо чи було повідомлення в період 6-8 сьогодні
+    let shouldSendMorningReport = false;
+    if (isMorningReport && lastState) {
+      const lastTimestamp = new Date(lastState.timestamp || 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const lastDate = new Date(lastTimestamp);
+      lastDate.setHours(0, 0, 0, 0);
       
-      const message = formatScheduleMessage(group, schedule, factData.update);
-      await sendTelegramMessage(message);
+      // Перевіряємо чи це той самий день і чи не було повідомлень з 6:00 до 8:00
+      const lastHour = lastTimestamp.getHours();
+      const wasMessageIn6to8 = lastState.lastMessageIn6to8 || (lastHour >= 6 && lastHour < 8 && lastDate.getTime() === today.getTime());
+      
+      if (!wasMessageIn6to8 && lastDate.getTime() === today.getTime()) {
+        shouldSendMorningReport = true;
+        console.log('📅 Ранкове повідомлення: не було змін з 6:00-8:00, відправляємо графік на день');
+      }
+    }
+    
+    if (comparison.changed || shouldSendMorningReport) {
+      let title;
+      if (shouldSendMorningReport) {
+        title = '🔌 Графік на сьогодні';
+        console.log('📅 Відправляємо ранкове повідомлення...');
+      } else {
+        title = comparison.title || '🔌 Оновлення графіку відключень';
+        console.log('📢 Виявлено зміни! Відправляємо повідомлення...');
+      }
+      
+      const message = formatScheduleMessage(title, group, schedule, factData.update);
+      const sent = await sendTelegramMessage(message);
+      
+      // Формуємо поточний стан з повним графіком
+      const currentState = {
+        update: factData.update,
+        group: group,
+        fullSchedule: fullSchedule, // Повний об'єкт з усіма 24 годинами
+        schedule: schedule, // Тільки для відображення
+        timestamp: new Date().toISOString(),
+        lastMessageIn6to8: sent && (hour >= 6 && hour < 8) // Відзначаємо якщо відправили в період 6-8
+      };
       
       // Зберігаємо новий стан
       saveState(currentState);
     } else {
       console.log('✅ Змін не виявлено, повідомлення не відправляється');
+      
+      // Все одно оновлюємо timestamp стану
+      const currentState = {
+        update: factData.update,
+        group: group,
+        fullSchedule: fullSchedule,
+        schedule: schedule,
+        timestamp: new Date().toISOString(),
+        lastMessageIn6to8: lastState?.lastMessageIn6to8 || false
+      };
+      saveState(currentState);
     }
     
     await browser.close();
