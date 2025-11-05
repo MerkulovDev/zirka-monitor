@@ -70,12 +70,24 @@ async function monitor() {
         console.log('📢 Виявлено зміни! Відправляємо повідомлення...');
       }
       
+      let scheduleForMessage = schedule;
+      if (
+        !shouldSendMorningReport &&
+        comparison.tomorrowChanged &&
+        !comparison.scheduleChanged &&
+        tomorrowSchedule
+      ) {
+        const { schedule: processedTomorrowSchedule } = processSchedule(tomorrowSchedule);
+        scheduleForMessage = processedTomorrowSchedule;
+        console.log('📅 Надсилаємо оновлений графік на завтра');
+      }
+
       const message = formatScheduleMessage(
         title, 
         group, 
-        schedule, 
+        scheduleForMessage, 
         factData.update, 
-        comparison.tomorrowChanged
+        comparison.tomorrowChanged && !shouldSendMorningReport
       );
       const sent = await sendTelegramMessage(message);
       

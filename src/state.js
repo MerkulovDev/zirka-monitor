@@ -111,6 +111,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
     title = '🔌 Оновлено графік і змінено групу';
   } else if (groupChanged) {
     title = '🔌 Група змінена';
+  } else if (!scheduleChanged && tomorrowChanged) {
+    title = '🔌 Графік на завтра оновлено';
   } else {
     title = '🔌 Графік оновлено';
   }
