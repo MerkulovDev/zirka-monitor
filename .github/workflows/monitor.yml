@@ -4,6 +4,10 @@ on:
   schedule:
     # Запускає кожну годину
     - cron: '0 * * * *'
+    # Альтернативи:
+    # - cron: '0 */2 * * *'  # Кожні 2 години
+    # - cron: '0 */4 * * *'  # Кожні 4 години
+    # - cron: '0 8,12,18 * * *'  # О 8:00, 12:00, 18:00
   workflow_dispatch: # Можна запустити вручну
 
 jobs:
@@ -11,8 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
     
     steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ github.token }}
       - name: Checkout code
         uses: actions/checkout@v4
       
