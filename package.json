@@ -1,13 +1,13 @@
 {
   "name": "zirka-monitor",
   "version": "1.0.0",
-  "description": "Моніторинг графіків відключень ДТЕК",
+  "description": "Моніторинг графіків відключень е.е. київ обл.",
   "main": "index.js",
   "scripts": {
     "start": "node monitor.js",
     "monitor": "node monitor.js"
   },
-  "keywords": ["dtek", "monitoring", "power-outage"],
+  "keywords": ["monitoring", "power-outage"],
   "author": "",
   "license": "MIT",
   "dependencies": {

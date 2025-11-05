@@ -1,4 +1,4 @@
-name: DTEK Power Outage Monitor
+name: Power Outage Monitor
 
 on:
   schedule:
@@ -32,6 +32,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
+          ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
+          ADDRESS_HOUSE: ${{ secrets.ADDRESS_HOUSE }}
         run: node monitor.js
       
       - name: Commit and push state file

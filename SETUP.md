@@ -25,7 +25,7 @@ git push -u origin main
 
 ```bash
 # Змініть remote на SSH
-git remote set-url origin git@github.com:MerkulovDev/zirka-monitor.git
+git remote set-url origin git@github.com:USERNAME/REPO.git
 
 # Push
 git push -u origin main
@@ -33,10 +33,10 @@ git push -u origin main
 
 ## Крок 2: Налаштування GitHub Secrets
 
-1. Перейдіть на GitHub: https://github.com/MerkulovDev/zirka-monitor
+1. Перейдіть на GitHub у ваш репозиторій
 2. Натисніть `Settings` → `Secrets and variables` → `Actions`
 3. Натисніть `New repository secret`
-4. Додайте два секрети:
+4. Додайте наступні секрети:
 
 ### TELEGRAM_BOT_TOKEN
 
@@ -60,10 +60,18 @@ git push -u origin main
 3. Публічний канал: використайте формат `@ім'я_каналу`
 4. Приватний канал: використайте негативний ID з API
 
+### ADDRESS_CITY, ADDRESS_STREET, ADDRESS_HOUSE
+
+Додайте три окремі секрети для адреси:
+
+- `ADDRESS_CITY` - місто (наприклад: "м. Київ")
+- `ADDRESS_STREET` - вулиця (наприклад: "вул. Хрещатик")
+- `ADDRESS_HOUSE` - номер будинку (наприклад: "1")
+
 ## Крок 3: Тестове виконання
 
 1. Перейдіть до вкладки `Actions`
-2. Виберіть workflow `DTEK Power Outage Monitor`
+2. Виберіть workflow `Monitor`
 3. Натисніть `Run workflow`
 4. Виберіть `main` гілку
 5. Натисніть `Run workflow`
@@ -85,6 +93,9 @@ npm install
 # Встановіть змінні середовища
 export TELEGRAM_BOT_TOKEN="ваш_токен"
 export TELEGRAM_CHAT_ID="ваш_chat_id"
+export ADDRESS_CITY="ваше_місто"
+export ADDRESS_STREET="ваша_вулиця"
+export ADDRESS_HOUSE="ваш_номер_будинку"
 
 # Запустіть моніторинг
 npm start
@@ -93,7 +104,7 @@ npm start
 ## ❓ Вирішення проблем
 
 ### Workflow не запускається автоматично
-- Перевірте, що файл `.github/workflows/dtek-monitor.yml` є в основній гілці
+- Перевірте, що файл `.github/workflows/monitor.yml` є в основній гілці
 - Перевірте, що cron вираз коректний: `0 * * * *`
 
 ### Не приходить сповіщення
@@ -102,16 +113,11 @@ npm start
 - Переконайтесь, що бот додано в канал/чат
 - Перегляньте логи в GitHub Actions для деталей помилки
 
-### Incapsula блокує доступ
-- Логіка обходу вже включена в `monitor.js`
-- Може знадобитися додаткове очікування залежно від навантаження сайту
-- Перегляньте логи для деталей
-
 ## 📊 Редагування налаштувань
 
 ### Зміна частоти моніторингу
 
-Відредагуйте `.github/workflows/dtek-monitor.yml`:
+Відредагуйте `.github/workflows/monitor.yml`:
 
 ```yaml
 schedule:
@@ -121,17 +127,6 @@ schedule:
   # - cron: '0 9,18 * * *'  # О 9:00 та 18:00
 ```
 
-### Зміна адреси моніторингу
-
-Відредагуйте `monitor.js`:
-
-```javascript
-const CONFIG = {
-  ADDRESS: 'м. Вишгород, вул. Шолуденка, 18А', // Змініть тут
-};
-```
-
 ## 🎉 Готово!
 
 Після налаштування моніторинг працюватиме автоматично кожну годину.
-
