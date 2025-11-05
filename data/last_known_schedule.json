@@ -1,5 +1,5 @@
 {
-  "update": "04.11.2025 20:27",
+  "update": "05.11.2025 13:30",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -13,8 +13,34 @@
     "9": "yes",
     "10": "no",
     "11": "no",
-    "12": "no",
-    "13": "first",
+    "12": "yes",
+    "13": "yes",
+    "14": "yes",
+    "15": "yes",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
+    "24": "yes"
+  },
+  "tomorrowSchedule": {
+    "1": "yes",
+    "2": "yes",
+    "3": "yes",
+    "4": "yes",
+    "5": "yes",
+    "6": "yes",
+    "7": "yes",
+    "8": "yes",
+    "9": "yes",
+    "10": "yes",
+    "11": "yes",
+    "12": "yes",
+    "13": "yes",
     "14": "yes",
     "15": "yes",
     "16": "yes",
@@ -39,20 +65,8 @@
       "range": "10:00-11:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 12,
-      "range": "11:00-12:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 13,
-      "range": "12:00-13:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 12:00 до 12:30"
     }
   ],
-  "timestamp": "2025-11-05T08:23:18.535Z",
+  "timestamp": "2025-11-05T13:01:18.567Z",
   "lastMessageIn6to8": false
 }
