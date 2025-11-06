@@ -108,13 +108,13 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   // Визначаємо заголовок повідомлення
   let title = '';
   if (groupChanged && scheduleChanged) {
-    title = '🔌 Оновлено графік і змінено групу';
+    title = '🔌 Графік оновлено на сьогодні (групу змінено)';
   } else if (groupChanged) {
     title = '🔌 Група змінена';
   } else if (!scheduleChanged && tomorrowChanged) {
-    title = '🔌 Графік на завтра оновлено';
+    title = '🔌 Графік оновлено на завтра';
   } else {
-    title = '🔌 Графік оновлено';
+    title = '🔌 Графік оновлено на сьогодні';
   }
 
   return { 

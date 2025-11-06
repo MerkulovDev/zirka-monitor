@@ -25,6 +25,7 @@ async function monitor() {
     const hour = now.getHours();
     const minutes = now.getMinutes();
     const isMorningReport = hour === 8 && minutes < 10; // О 8:00-8:10
+    const isQuietHours = hour >= 23 || hour < 8;
     
     // Порівнюємо з попереднім станом
     const lastState = getLastKnownState();
@@ -62,12 +63,19 @@ async function monitor() {
     
     if (comparison.changed || shouldSendMorningReport) {
       let title;
+      let pendingLog;
       if (shouldSendMorningReport) {
         title = '🔌 Графік на сьогодні';
-        console.log('📅 Відправляємо ранкове повідомлення...');
+        pendingLog = '📅 Відправляємо ранкове повідомлення...';
       } else {
-        title = comparison.title || '🔌 Оновлення графіку відключень';
-        console.log('📢 Виявлено зміни! Відправляємо повідомлення...');
+        if (comparison.title) {
+          title = comparison.title;
+        } else if (comparison.tomorrowChanged && !comparison.scheduleChanged) {
+          title = '🔌 Графік оновлено на завтра';
+        } else {
+          title = '🔌 Графік оновлено на сьогодні';
+        }
+        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       }
       
       let scheduleForMessage = schedule;
@@ -82,14 +90,19 @@ async function monitor() {
         console.log('📅 Надсилаємо оновлений графік на завтра');
       }
 
-      const message = formatScheduleMessage(
-        title, 
-        group, 
-        scheduleForMessage, 
-        factData.update, 
-        comparison.tomorrowChanged && !shouldSendMorningReport
-      );
-      const sent = await sendTelegramMessage(message);
+      let sent = false;
+      if (isQuietHours && !shouldSendMorningReport) {
+        console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
+      } else {
+        console.log(pendingLog);
+        const message = formatScheduleMessage(
+          title, 
+          group, 
+          scheduleForMessage, 
+          factData.update
+        );
+        sent = await sendTelegramMessage(message);
+      }
       
       // Формуємо поточний стан з повним графіком
       const currentState = {

@@ -80,7 +80,7 @@ function mergeDisconnectionPeriods(scheduleData) {
 }
 
 // Функція для форматування графіку відключень
-function formatScheduleMessage(title, group, scheduleData, updateTime, isTomorrowUpdate = false) {
+function formatScheduleMessage(title, group, scheduleData, updateTime) {
   // Прибираємо префікс "GPV" з назви групи
   const groupDisplay = group.replace(/^GPV/, '');
   
@@ -88,11 +88,6 @@ function formatScheduleMessage(title, group, scheduleData, updateTime, isTomorro
   message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
   message += `⚡ Група: <b>${groupDisplay}</b>\n`;
   message += `🕐 Оновлено: ${updateTime}\n`;
-  
-  if (isTomorrowUpdate) {
-    message += `\n📅 Оновлено графік на завтра\n`;
-  }
-  
   message += `\n`;
 
   if (!scheduleData || scheduleData.length === 0) {
