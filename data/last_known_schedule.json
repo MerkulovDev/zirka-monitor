@@ -20,7 +20,7 @@
     "16": "yes",
     "17": "yes",
     "18": "yes",
-    "19": "first",
+    "19": "yes",
     "20": "yes",
     "21": "yes",
     "22": "yes",
@@ -53,14 +53,7 @@
     "23": "yes",
     "24": "yes"
   },
-  "schedule": [
-    {
-      "hour": 19,
-      "range": "18:00-19:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 18:00 до 18:30"
-    }
-  ],
-  "timestamp": "2025-11-06T21:08:37.305Z",
+  "schedule": [],
+  "timestamp": "2025-11-06T22:09:30.903Z",
   "lastMessageIn6to8": false
 }
