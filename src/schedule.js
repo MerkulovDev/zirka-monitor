@@ -80,30 +80,57 @@ function mergeDisconnectionPeriods(scheduleData) {
 }
 
 // Функція для форматування графіку відключень
-function formatScheduleMessage(title, group, scheduleData, updateTime) {
+function formatScheduleMessage(title, group, scheduleSections, updateTime) {
   // Прибираємо префікс "GPV" з назви групи
   const groupDisplay = group.replace(/^GPV/, '');
-  
+
+  let normalizedSections;
+  if (Array.isArray(scheduleSections)) {
+    const first = scheduleSections[0];
+    const looksLikeScheduleItem = first && typeof first === 'object' && 'range' in first && !('scheduleData' in first);
+    if (looksLikeScheduleItem) {
+      normalizedSections = [{ label: null, scheduleData: scheduleSections }];
+    } else {
+      normalizedSections = scheduleSections.map(section => ({
+        label: section.label || null,
+        scheduleData: section.scheduleData || section.schedule || []
+      }));
+    }
+  } else {
+    normalizedSections = [{ label: null, scheduleData: [] }];
+  }
+
   let message = `<b>${title}</b>\n\n`;
   message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
   message += `⚡ Група: <b>${groupDisplay}</b>\n`;
-  message += `🕐 Оновлено: ${updateTime}\n`;
-  message += `\n`;
+  message += `🕐 Оновлено: ${updateTime}\n\n`;
 
-  if (!scheduleData || scheduleData.length === 0) {
-    message += `✅ Відключень не заплановано - світло буде весь день!`;
-  } else {
-    const mergedPeriod = mergeDisconnectionPeriods(scheduleData);
-    if (mergedPeriod) {
-      message += `<b>📅 Періоди відключення:</b>\n`;
-      message += `${mergedPeriod}`;
+  normalizedSections.forEach((section, index) => {
+    const labelDisplay = section.label ? section.label.charAt(0).toUpperCase() + section.label.slice(1) : null;
+    const labelSuffix = labelDisplay ? ` (${labelDisplay})` : '';
+    message += `<b>📅 Періоди відключення${labelSuffix}:</b>\n`;
+
+    const data = Array.isArray(section.scheduleData) ? section.scheduleData : [];
+    if (!data.length) {
+      message += `✅ Відключень не заплановано - світло буде весь день!`;
     } else {
-      message += `<b>📅 Періоди відключення:</b>\n`;
-      scheduleData.forEach(({ range, interpretation }) => {
-        message += `${range}: ${interpretation}\n`;
-      });
+      const mergedPeriod = mergeDisconnectionPeriods(data);
+      if (mergedPeriod) {
+        message += `${mergedPeriod}`;
+      } else {
+        data.forEach(({ range, interpretation }, idx) => {
+          message += `${range}: ${interpretation}`;
+          if (idx !== data.length - 1) {
+            message += `\n`;
+          }
+        });
+      }
     }
-  }
+
+    if (index !== normalizedSections.length - 1) {
+      message += `\n\n`;
+    }
+  });
 
   return message;
 }

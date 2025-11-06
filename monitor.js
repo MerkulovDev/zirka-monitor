@@ -67,27 +67,33 @@ async function monitor() {
       if (shouldSendMorningReport) {
         title = '🔌 Графік на сьогодні';
         pendingLog = '📅 Відправляємо ранкове повідомлення...';
+      } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
+        title = '🔌 Групу оновлено';
+        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
+      } else if (comparison.scheduleChanged && comparison.tomorrowChanged) {
+        title = '🔌 Графік оновлено на сьогодні і завтра';
+        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
+      } else if (comparison.scheduleChanged) {
+        title = '🔌 Графік оновлено на сьогодні';
+        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
+      } else if (comparison.tomorrowChanged) {
+        title = '🔌 Графік оновлено на завтра';
+        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else {
-        if (comparison.title) {
-          title = comparison.title;
-        } else if (comparison.tomorrowChanged && !comparison.scheduleChanged) {
-          title = '🔌 Графік оновлено на завтра';
-        } else {
-          title = '🔌 Графік оновлено на сьогодні';
-        }
+        title = '🔌 Оновлення графіку відключень';
         pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       }
-      
-      let scheduleForMessage = schedule;
-      if (
-        !shouldSendMorningReport &&
-        comparison.tomorrowChanged &&
-        !comparison.scheduleChanged &&
-        tomorrowSchedule
-      ) {
+
+      const scheduleSections = [];
+      if (shouldSendMorningReport || comparison.scheduleChanged) {
+        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+      }
+      if (!shouldSendMorningReport && comparison.tomorrowChanged && tomorrowSchedule) {
         const { schedule: processedTomorrowSchedule } = processSchedule(tomorrowSchedule);
-        scheduleForMessage = processedTomorrowSchedule;
-        console.log('📅 Надсилаємо оновлений графік на завтра');
+        scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule });
+      }
+      if (scheduleSections.length === 0) {
+        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
       }
 
       let sent = false;
@@ -98,7 +104,7 @@ async function monitor() {
         const message = formatScheduleMessage(
           title, 
           group, 
-          scheduleForMessage, 
+          scheduleSections, 
           factData.update
         );
         sent = await sendTelegramMessage(message);
