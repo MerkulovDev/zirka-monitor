@@ -86,18 +86,27 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
 
   let normalizedSections;
   if (Array.isArray(scheduleSections)) {
-    const first = scheduleSections[0];
-    const looksLikeScheduleItem = first && typeof first === 'object' && 'range' in first && !('scheduleData' in first);
-    if (looksLikeScheduleItem) {
-      normalizedSections = [{ label: null, scheduleData: scheduleSections }];
+    if (scheduleSections.length === 0) {
+      normalizedSections = [{ label: null, scheduleData: [], note: null }];
     } else {
-      normalizedSections = scheduleSections.map(section => ({
-        label: section.label || null,
-        scheduleData: section.scheduleData || section.schedule || []
-      }));
+      const first = scheduleSections[0];
+      const looksLikeScheduleItem = first && typeof first === 'object' && 'range' in first && !('scheduleData' in first) && !('note' in first);
+      if (looksLikeScheduleItem) {
+        normalizedSections = [{ label: null, scheduleData: scheduleSections, note: null }];
+      } else {
+        normalizedSections = scheduleSections.map(section => ({
+          label: section.label || null,
+          scheduleData: Array.isArray(section.scheduleData)
+            ? section.scheduleData
+            : Array.isArray(section.schedule)
+              ? section.schedule
+              : [],
+          note: section.note || null
+        }));
+      }
     }
   } else {
-    normalizedSections = [{ label: null, scheduleData: [] }];
+    normalizedSections = [{ label: null, scheduleData: [], note: null }];
   }
 
   let message = `<b>${title}</b>\n\n`;
@@ -111,7 +120,9 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
     message += `<b>📅 Періоди відключення${labelSuffix}:</b>\n`;
 
     const data = Array.isArray(section.scheduleData) ? section.scheduleData : [];
-    if (!data.length) {
+    if (section.note) {
+      message += `${section.note}`;
+    } else if (!data.length) {
       message += `✅ Відключень не заплановано - світло буде весь день!`;
     } else {
       const mergedPeriod = mergeDisconnectionPeriods(data);

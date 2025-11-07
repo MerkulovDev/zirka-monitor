@@ -2,8 +2,8 @@ name: Power Outage Monitor
 
 on:
   schedule:
-    # Запускає кожну годину
-    - cron: '0 * * * *'
+    # Запускає кожні 30 хвилин
+    - cron: '*/30 * * * *'
     # Альтернативи:
     # - cron: '0 */2 * * *'  # Кожні 2 години
     # - cron: '0 */4 * * *'  # Кожні 4 години
@@ -44,6 +44,7 @@ jobs:
           ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
           ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
           ADDRESS_HOUSE: ${{ secrets.ADDRESS_HOUSE }}
+          TZ: Europe/Kyiv
         run: node monitor.js
       
       - name: Commit and push state file

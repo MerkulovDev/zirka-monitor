@@ -4,6 +4,13 @@ const { processSchedule, formatScheduleMessage } = require('./src/schedule');
 const { getLastKnownState, saveState, compareStates } = require('./src/state');
 const { scrapeSchedule } = require('./src/scraper');
 
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Перевіряємо конфігурацію при запуску
 validateConfig();
 
@@ -25,7 +32,9 @@ async function monitor() {
     const hour = now.getHours();
     const minutes = now.getMinutes();
     const isMorningReport = hour === 8 && minutes < 10; // О 8:00-8:10
+    const isEveningReport = hour === 21 && minutes < 10; // О 21:00-21:10
     const isQuietHours = hour >= 23 || hour < 8;
+    const todayKey = getLocalDateKey(now);
     
     // Порівнюємо з попереднім станом
     const lastState = getLastKnownState();
@@ -42,31 +51,38 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
     
-    // Перевіряємо чи було повідомлення в період 6-8 сьогодні
+    // Планові повідомлення
     let shouldSendMorningReport = false;
-    if (isMorningReport && lastState) {
-      const lastTimestamp = new Date(lastState.timestamp || 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const lastDate = new Date(lastTimestamp);
-      lastDate.setHours(0, 0, 0, 0);
-      
-      // Перевіряємо чи це той самий день і чи не було повідомлень з 6:00 до 8:00
-      const lastHour = lastTimestamp.getHours();
-      const wasMessageIn6to8 = lastState.lastMessageIn6to8 || (lastHour >= 6 && lastHour < 8 && lastDate.getTime() === today.getTime());
-      
-      if (!wasMessageIn6to8 && lastDate.getTime() === today.getTime()) {
+    if (isMorningReport) {
+      const lastMorningDate = lastState?.lastMorningReportDate || null;
+      if (lastMorningDate === todayKey) {
+        console.log('☀️ Ранковий звіт уже відправлено сьогодні.');
+      } else {
         shouldSendMorningReport = true;
-        console.log('📅 Ранкове повідомлення: не було змін з 6:00-8:00, відправляємо графік на день');
+        console.log('☀️ Плановий ранковий звіт о 08:00.');
+      }
+    }
+
+    let shouldSendEveningReport = false;
+    if (isEveningReport) {
+      const lastEveningDate = lastState?.lastEveningReportDate || null;
+      if (lastEveningDate === todayKey) {
+        console.log('🌆 Вечірнє інформування вже відправлено сьогодні.');
+      } else {
+        shouldSendEveningReport = true;
+        console.log('🌆 Планове інформування о 21:00.');
       }
     }
     
-    if (comparison.changed || shouldSendMorningReport) {
+    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
       let title;
       let pendingLog;
       if (shouldSendMorningReport) {
         title = '🔌 Графік на сьогодні';
         pendingLog = '📅 Відправляємо ранкове повідомлення...';
+      } else if (shouldSendEveningReport) {
+        title = '🔌 Графік на завтра';
+        pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
       } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
         title = '🔌 Групу оновлено';
         pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
@@ -85,19 +101,50 @@ async function monitor() {
       }
 
       const scheduleSections = [];
-      if (shouldSendMorningReport || comparison.scheduleChanged) {
-        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+      let addedToday = false;
+      let addedTomorrow = false;
+      const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule).schedule : null;
+
+      const pushTodaySection = () => {
+        if (!addedToday) {
+          scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+          addedToday = true;
+        }
+      };
+
+      const pushTomorrowSection = () => {
+        if (!addedTomorrow) {
+          if (tomorrowSchedule) {
+            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule || [] });
+          } else {
+            scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
+          }
+          addedTomorrow = true;
+        }
+      };
+
+      if (shouldSendMorningReport) {
+        pushTodaySection();
       }
-      if (!shouldSendMorningReport && comparison.tomorrowChanged && tomorrowSchedule) {
-        const { schedule: processedTomorrowSchedule } = processSchedule(tomorrowSchedule);
-        scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule });
+
+      if (shouldSendEveningReport) {
+        pushTomorrowSection();
       }
+
+      if (!addedToday && comparison.scheduleChanged) {
+        pushTodaySection();
+      }
+
+      if (!addedTomorrow && comparison.tomorrowChanged) {
+        pushTomorrowSection();
+      }
+
       if (scheduleSections.length === 0) {
-        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+        pushTodaySection();
       }
 
       let sent = false;
-      if (isQuietHours && !shouldSendMorningReport) {
+      if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport) {
         console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
       } else {
         console.log(pendingLog);
@@ -110,6 +157,16 @@ async function monitor() {
         sent = await sendTelegramMessage(message);
       }
       
+      const updatedLastMorningReportDate = sent && shouldSendMorningReport
+        ? todayKey
+        : lastState?.lastMorningReportDate || null;
+      const updatedLastEveningReportDate = sent && shouldSendEveningReport
+        ? todayKey
+        : lastState?.lastEveningReportDate || null;
+      const updatedLastMessageIn6to8 = shouldSendMorningReport
+        ? sent
+        : lastState?.lastMessageIn6to8 || false;
+
       // Формуємо поточний стан з повним графіком
       const currentState = {
         update: factData.update,
@@ -118,7 +175,9 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: sent && (hour >= 6 && hour < 8)
+        lastMessageIn6to8: updatedLastMessageIn6to8,
+        lastMorningReportDate: updatedLastMorningReportDate,
+        lastEveningReportDate: updatedLastEveningReportDate
       };
       
       // Зберігаємо новий стан
@@ -134,7 +193,9 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: lastState?.lastMessageIn6to8 || false
+        lastMessageIn6to8: lastState?.lastMessageIn6to8 || false,
+        lastMorningReportDate: lastState?.lastMorningReportDate || null,
+        lastEveningReportDate: lastState?.lastEveningReportDate || null
       };
       saveState(currentState);
     }
