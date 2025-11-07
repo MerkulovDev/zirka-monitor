@@ -19,7 +19,18 @@ async function monitor() {
   try {
     console.log('🔌 Запуск моніторингу');
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
-    
+
+    let now = new Date();
+    let hour = now.getHours();
+    let minutes = now.getMinutes();
+    const isMorningWindow = hour === 8 && minutes < 10; // О 8:00-8:10
+    const isQuietHoursEarly = hour >= 23 || hour < 8;
+
+    if (isQuietHoursEarly && !isMorningWindow) {
+      console.log('🌙 Після 23:00 до 08:00 скрапінг не виконуємо. Очікуємо ранок.');
+      return;
+    }
+
     // Скрапінг даних
     const { factData, group, groupSchedule, tomorrowSchedule } = await scrapeSchedule();
     
@@ -28,11 +39,11 @@ async function monitor() {
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
     
     // Визначаємо чи є ранкове повідомлення (о 8:00)
-    const now = new Date();
-    const hour = now.getHours();
-    const minutes = now.getMinutes();
-    const isMorningReport = hour === 8 && minutes < 10; // О 8:00-8:10
-    const isEveningReport = hour === 21 && minutes < 10; // О 21:00-21:10
+    now = new Date();
+    hour = now.getHours();
+    minutes = now.getMinutes();
+    const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20
+    const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20
     const isQuietHours = hour >= 23 || hour < 8;
     const todayKey = getLocalDateKey(now);
     
@@ -143,6 +154,17 @@ async function monitor() {
         pushTodaySection();
       }
 
+      const lastEveningTomorrow = lastState?.tomorrowSchedule || null;
+      const todaysFullScheduleJson = JSON.stringify(fullSchedule || {});
+      const lastEveningTomorrowJson = JSON.stringify(lastEveningTomorrow || {});
+      const isMorningSameAsLastEvening = shouldSendMorningReport && lastEveningTomorrow && todaysFullScheduleJson === lastEveningTomorrowJson;
+
+      if (isMorningSameAsLastEvening) {
+        console.log('🔇 Ранковий графік не змінився відносно вчорашнього вечірнього. Відправляємо беззвучно.');
+      }
+
+      const forceSilent = isMorningSameAsLastEvening;
+
       let sent = false;
       if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport) {
         console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
@@ -154,7 +176,7 @@ async function monitor() {
           scheduleSections, 
           factData.update
         );
-        sent = await sendTelegramMessage(message);
+        sent = await sendTelegramMessage(message, forceSilent);
       }
       
       const updatedLastMorningReportDate = sent && shouldSendMorningReport
