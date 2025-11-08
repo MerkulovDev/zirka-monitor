@@ -30,53 +30,57 @@ function interpretHourValue(hour, value) {
 // Функція для об'єднання періодів відключення в один проміжок
 function mergeDisconnectionPeriods(scheduleData) {
   if (!scheduleData || scheduleData.length === 0) {
-    return null;
+    return [];
   }
 
-  // Сортуємо за годинами
+  const toMinutes = (hour, value) => {
+    const hourEnd = hour * 60;
+    const hourStart = hourEnd - 60;
+
+    switch (value) {
+      case 'no':
+        return { start: hourStart, end: hourEnd };
+      case 'first':
+        return { start: hourStart, end: hourStart + 30 };
+      case 'second':
+        return { start: hourStart + 30, end: hourEnd };
+      default:
+        return null;
+    }
+  };
+
+  const formatMinutes = (minutes) => {
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  };
+
+  const segments = [];
   const sorted = [...scheduleData].sort((a, b) => a.hour - b.hour);
-  
-  // Знаходимо початок першого відключення
-  // hour означає період (hour-1):00 - hour:00
-  let startHour = sorted[0].hour - 1;
-  let startMinute = 0;
-  
-  // Визначаємо початок на основі типу відключення
-  if (sorted[0].value === 'second') {
-    // Відключення з 30 хвилини попередньої години
-    startMinute = 30;
-  } else if (sorted[0].value === 'first') {
-    // Відключення з початку години
-    startMinute = 0;
-  } else if (sorted[0].value === 'no') {
-    // Відключення весь проміжок, починається з попередньої години
-    startMinute = 0;
+  sorted.forEach((item) => {
+    const interval = toMinutes(item.hour, item.value);
+    if (interval && interval.end > interval.start) {
+      segments.push(interval);
+    }
+  });
+
+  if (segments.length === 0) {
+    return [];
   }
-  
-  // Знаходимо кінець останнього відключення
-  let lastItem = sorted[sorted.length - 1];
-  let endHour = lastItem.hour - 1; // Базовий час - попередня година
-  let endMinute = 0;
-  
-  // Визначаємо кінець на основі типу відключення
-  if (lastItem.value === 'first') {
-    // Відключення з початку години до 30 хвилини
-    endHour = lastItem.hour - 1;
-    endMinute = 30;
-  } else if (lastItem.value === 'second') {
-    // Відключення з 30 хвилини до кінця години
-    endHour = lastItem.hour;
-    endMinute = 0;
-  } else if (lastItem.value === 'no') {
-    // Відключення весь проміжок, закінчується на початку поточної години
-    endHour = lastItem.hour;
-    endMinute = 0;
+
+  const merged = [segments[0]];
+  for (let i = 1; i < segments.length; i++) {
+    const current = segments[i];
+    const last = merged[merged.length - 1];
+
+    if (current.start <= last.end) {
+      last.end = Math.max(last.end, current.end);
+    } else {
+      merged.push({ ...current });
+    }
   }
-  
-  const startStr = String(startHour).padStart(2, '0') + ':' + String(startMinute).padStart(2, '0');
-  const endStr = String(endHour).padStart(2, '0') + ':' + String(endMinute).padStart(2, '0');
-  
-  return `${startStr} - ${endStr}`;
+
+  return merged.map(({ start, end }) => `${formatMinutes(start)} - ${formatMinutes(end)}`);
 }
 
 // Функція для форматування графіку відключень
@@ -125,9 +129,14 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
     } else if (!data.length) {
       message += `✅ Відключень не заплановано - світло буде весь день!`;
     } else {
-      const mergedPeriod = mergeDisconnectionPeriods(data);
-      if (mergedPeriod) {
-        message += `${mergedPeriod}`;
+      const mergedPeriods = mergeDisconnectionPeriods(data);
+      if (mergedPeriods.length > 0) {
+        mergedPeriods.forEach((period, idx) => {
+          message += `${period}`;
+          if (idx !== mergedPeriods.length - 1) {
+            message += `\n`;
+          }
+        });
       } else {
         data.forEach(({ range, interpretation }, idx) => {
           message += `${range}: ${interpretation}`;
