@@ -55,6 +55,17 @@ function mergeDisconnectionPeriods(scheduleData) {
     return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
   };
 
+  const formatDuration = (minutes) => {
+    const hrs = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    const hrsPart = hrs > 0 ? `${hrs} год` : '';
+    const minsPart = mins > 0 ? `${mins} хв` : '';
+    if (hrsPart && minsPart) {
+      return `${hrsPart} ${minsPart}`;
+    }
+    return hrsPart || minsPart || '0 хв';
+  };
+
   const segments = [];
   const sorted = [...scheduleData].sort((a, b) => a.hour - b.hour);
   sorted.forEach((item) => {
@@ -80,7 +91,14 @@ function mergeDisconnectionPeriods(scheduleData) {
     }
   }
 
-  return merged.map(({ start, end }) => `${formatMinutes(start)} - ${formatMinutes(end)}`);
+  return merged.map(({ start, end }) => ({
+    startMinutes: start,
+    endMinutes: end,
+    startStr: formatMinutes(start),
+    endStr: formatMinutes(end),
+    durationMinutes: end - start,
+    durationStr: formatDuration(end - start),
+  }));
 }
 
 // Функція для форматування графіку відключень
@@ -132,7 +150,7 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
       const mergedPeriods = mergeDisconnectionPeriods(data);
       if (mergedPeriods.length > 0) {
         mergedPeriods.forEach((period, idx) => {
-          message += `${period}`;
+          message += `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
           if (idx !== mergedPeriods.length - 1) {
             message += `\n`;
           }
