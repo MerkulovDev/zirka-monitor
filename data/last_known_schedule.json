@@ -1,5 +1,5 @@
 {
-  "update": "08.11.2025 22:01",
+  "update": "09.11.2025 09:03",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "first",
@@ -23,7 +23,7 @@
     "19": "no",
     "20": "no",
     "21": "no",
-    "22": "no",
+    "22": "first",
     "23": "yes",
     "24": "yes"
   },
@@ -105,11 +105,11 @@
     {
       "hour": 22,
       "range": "21:00-22:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2025-11-09T06:44:57.939Z",
+  "timestamp": "2025-11-09T07:08:28.677Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-09",
   "lastEveningReportDate": "2025-11-08"
