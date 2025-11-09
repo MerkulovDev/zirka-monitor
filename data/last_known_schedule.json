@@ -1,5 +1,5 @@
 {
-  "update": "09.11.2025 14:27",
+  "update": "09.11.2025 16:48",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "first",
@@ -109,7 +109,7 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2025-11-09T14:34:15.219Z",
+  "timestamp": "2025-11-09T15:08:03.220Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-09",
   "lastEveningReportDate": "2025-11-08"
