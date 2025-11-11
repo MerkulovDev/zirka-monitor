@@ -10,8 +10,12 @@ function canSendMessage() {
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   
   // 00:00-06:00 - не відправляти взагалі
-  if (currentTime >= 0 && currentTime < 360) {
-    return { canSend: false, silent: false, reason: 'Нічний час (00:00-06:00)' };
+  if (currentTime >= 0 && currentTime < 240) {
+    return { canSend: false, silent: false, reason: 'Нічний час (00:00-04:00)' };
+  }
+
+  if (currentTime >= 240 && currentTime < 360) {
+    return { canSend: true, silent: true, reason: 'Нічний час (04:00-06:00)' };
   }
   
   // 06:00-08:00 - беззвучні повідомлення

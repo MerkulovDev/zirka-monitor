@@ -1,6 +1,6 @@
 const { CONFIG, validateConfig } = require('./src/config');
 const { sendTelegramMessage } = require('./src/telegram');
-const { processSchedule, formatScheduleMessage } = require('./src/schedule');
+const { processSchedule, formatScheduleMessage, mergeDisconnectionPeriods } = require('./src/schedule');
 const { getLastKnownState, saveState, compareStates } = require('./src/state');
 const { scrapeSchedule } = require('./src/scraper');
 
@@ -9,6 +9,42 @@ function getLocalDateKey(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function formatDurationForReminder(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const parts = [];
+
+  if (hours > 0) {
+    let label;
+    if (hours === 1) {
+      label = '1 година';
+    } else if (hours >= 5) {
+      label = `${hours} годин`;
+    } else {
+      label = `${hours} години`;
+    }
+    parts.push(label);
+  }
+
+  if (minutes > 0) {
+    let label;
+    if (minutes === 1) {
+      label = '1 хвилина';
+    } else if ([2, 3, 4].includes(minutes % 10) && ![12, 13, 14].includes(minutes)) {
+      label = `${minutes} хвилини`;
+    } else {
+      label = `${minutes} хвилин`;
+    }
+    parts.push(label);
+  }
+
+  if (parts.length === 0) {
+    return '0 хвилин';
+  }
+
+  return parts.join(' ');
 }
 
 // Перевіряємо конфігурацію при запуску
@@ -23,10 +59,11 @@ async function monitor() {
     let now = new Date();
     let hour = now.getHours();
     let minutes = now.getMinutes();
-    const isMorningWindow = hour === 8 && minutes < 10; // О 8:00-8:10
+    const isMorningWindow = hour === 8 && minutes < 20; // О 8:00-8:20
+    const isNightWindow = hour === 4 && minutes < 20; // О 4:00-4:20
     const isQuietHoursEarly = hour >= 23 || hour < 8;
 
-    if (isQuietHoursEarly && !isMorningWindow) {
+    if (isQuietHoursEarly && !isMorningWindow && !isNightWindow) {
       console.log('🌙 Після 23:00 до 08:00 скрапінг не виконуємо. Очікуємо ранок.');
       return;
     }
@@ -37,14 +74,17 @@ async function monitor() {
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
+    const mergedTodayIntervals = mergeDisconnectionPeriods(schedule);
     
     // Визначаємо чи є ранкове повідомлення (о 8:00)
     now = new Date();
     hour = now.getHours();
     minutes = now.getMinutes();
     const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20
+    const isNightReport = hour === 4 && minutes < 20; // О 4:00-4:20
     const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20
     const isQuietHours = hour >= 23 || hour < 8;
+    const nowMinutes = hour * 60 + minutes;
     const todayKey = getLocalDateKey(now);
     
     // Порівнюємо з попереднім станом
@@ -61,6 +101,72 @@ async function monitor() {
     );
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
+
+    let shouldSendNightReport = false;
+    if (isNightReport) {
+      const lastNightDate = lastState?.lastNightReportDate || null;
+      if (lastNightDate === todayKey) {
+        console.log('🌙 Нічний звіт уже відправлено сьогодні.');
+      } else if (comparison.changed) {
+        shouldSendNightReport = true;
+        console.log('🌙 Нічний моніторинг: зафіксовано зміни, готуємо беззвучне повідомлення.');
+      } else {
+        console.log('🌙 Нічний моніторинг: змін немає, повідомлення не надсилаємо.');
+      }
+    }
+    
+    // Логіка нагадувань за 30 хвилин до відключення
+    const remindersRaw = lastState && typeof lastState.remindersSent === 'object' && !Array.isArray(lastState.remindersSent)
+      ? { ...lastState.remindersSent }
+      : {};
+    const todaysReminderSet = new Set(
+      Array.isArray(remindersRaw[todayKey]) ? remindersRaw[todayKey] : []
+    );
+    const dueReminders = [];
+    mergedTodayIntervals.forEach(interval => {
+      const diff = interval.startMinutes - nowMinutes;
+      if (diff > 0 && diff <= 30) {
+        const key = String(interval.startMinutes);
+        if (!todaysReminderSet.has(key)) {
+          dueReminders.push({ interval });
+        }
+      }
+    });
+    
+    let reminderMessageSent = false;
+    if (dueReminders.length > 0) {
+      console.log(`⏰ Наближаються відключення через ≤30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
+      let reminderMessage = `<b>🔔 Нагадування про відключення</b>\n\n`;
+      reminderMessage += `Через 30 хвилин очікується планове відключення.\n`;
+      reminderMessage += `Підготуйтесь: світла не буде за вказаними проміжками.\n\n`;
+      reminderMessage += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
+      reminderMessage += `⚡ Група: <b>${group.replace(/^GPV/, '')}</b>\n`;
+      reminderMessage += `🕐 Оновлено: ${factData.update}\n\n`;
+      reminderMessage += `🔜 Найближчі відключення:\n`;
+      dueReminders.forEach(({ interval }, idx) => {
+        const durationText = formatDurationForReminder(interval.durationMinutes);
+        reminderMessage += `${interval.startStr} - ${interval.endStr} · ${interval.durationStr}\n`;
+        reminderMessage += `Світла не буде ${durationText} до ${interval.endStr}.`;
+        if (idx !== dueReminders.length - 1) {
+          reminderMessage += `\n\n`;
+        }
+      });
+      
+      reminderMessageSent = await sendTelegramMessage(reminderMessage, true);
+      if (reminderMessageSent) {
+        console.log('✅ Нагадування надіслано');
+        dueReminders.forEach(({ interval }) => {
+          todaysReminderSet.add(String(interval.startMinutes));
+        });
+      } else {
+        console.log('⚠️ Нагадування не вдалося надіслати');
+      }
+    }
+    
+    const updatedRemindersSentMap = {};
+    if (todaysReminderSet.size > 0) {
+      updatedRemindersSentMap[todayKey] = Array.from(todaysReminderSet);
+    }
     
     // Планові повідомлення
     let shouldSendMorningReport = false;
@@ -85,12 +191,15 @@ async function monitor() {
       }
     }
     
-    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
+    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
       let title;
       let pendingLog;
       if (shouldSendMorningReport) {
         title = '🔌 Графік на сьогодні';
         pendingLog = '📅 Відправляємо ранкове повідомлення...';
+      } else if (shouldSendNightReport) {
+        title = '🔌 Нічне оновлення графіку';
+        pendingLog = '🌙 Відправляємо нічне повідомлення...';
       } else if (shouldSendEveningReport) {
         title = '🔌 Графік на завтра';
         pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
@@ -141,6 +250,9 @@ async function monitor() {
       if (shouldSendEveningReport) {
         pushTomorrowSection();
       }
+      if (shouldSendNightReport && comparison.tomorrowChanged) {
+        pushTomorrowSection();
+      }
 
       if (!addedToday && comparison.scheduleChanged) {
         pushTodaySection();
@@ -159,14 +271,16 @@ async function monitor() {
       const lastEveningTomorrowJson = JSON.stringify(lastEveningTomorrow || {});
       const isMorningSameAsLastEvening = shouldSendMorningReport && lastEveningTomorrow && todaysFullScheduleJson === lastEveningTomorrowJson;
 
-      if (isMorningSameAsLastEvening) {
+      if (shouldSendNightReport) {
+        console.log('🔇 Нічне повідомлення буде відправлено беззвучно.');
+      } else if (isMorningSameAsLastEvening) {
         console.log('🔇 Ранковий графік не змінився відносно вчорашнього вечірнього. Відправляємо беззвучно.');
       }
 
-      const forceSilent = isMorningSameAsLastEvening;
+      const forceSilent = isMorningSameAsLastEvening || shouldSendNightReport;
 
       let sent = false;
-      if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport) {
+      if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport && !shouldSendNightReport) {
         console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
       } else {
         console.log(pendingLog);
@@ -185,6 +299,9 @@ async function monitor() {
       const updatedLastEveningReportDate = sent && shouldSendEveningReport
         ? todayKey
         : lastState?.lastEveningReportDate || null;
+      const updatedLastNightReportDate = sent && shouldSendNightReport
+        ? todayKey
+        : lastState?.lastNightReportDate || null;
       const updatedLastMessageIn6to8 = shouldSendMorningReport
         ? sent
         : lastState?.lastMessageIn6to8 || false;
@@ -199,7 +316,9 @@ async function monitor() {
         timestamp: new Date().toISOString(),
         lastMessageIn6to8: updatedLastMessageIn6to8,
         lastMorningReportDate: updatedLastMorningReportDate,
-        lastEveningReportDate: updatedLastEveningReportDate
+        lastEveningReportDate: updatedLastEveningReportDate,
+        lastNightReportDate: updatedLastNightReportDate,
+        remindersSent: updatedRemindersSentMap
       };
       
       // Зберігаємо новий стан
@@ -217,7 +336,9 @@ async function monitor() {
         timestamp: new Date().toISOString(),
         lastMessageIn6to8: lastState?.lastMessageIn6to8 || false,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
-        lastEveningReportDate: lastState?.lastEveningReportDate || null
+        lastEveningReportDate: lastState?.lastEveningReportDate || null,
+        lastNightReportDate: lastState?.lastNightReportDate || null,
+        remindersSent: updatedRemindersSentMap
       };
       saveState(currentState);
     }
