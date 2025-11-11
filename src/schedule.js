@@ -145,7 +145,7 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
     if (section.note) {
       message += `${section.note}`;
     } else if (!data.length) {
-      message += `✅ Відключень не заплановано - світло буде весь день!`;
+      message += `✅ Відключень не заплановано`;
     } else {
       const mergedPeriods = mergeDisconnectionPeriods(data);
       if (mergedPeriods.length > 0) {
