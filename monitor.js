@@ -47,6 +47,70 @@ function formatDurationForReminder(totalMinutes) {
   return parts.join(' ');
 }
 
+function formatDurationShort(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const parts = [];
+  if (hours > 0) {
+    parts.push(`${hours} год`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} хв`);
+  }
+  if (parts.length === 0) {
+    return '0 хв';
+  }
+  return parts.join(' ');
+}
+
+const MINUTES_IN_DAY = 24 * 60;
+
+function formatTimeFromMinutes(minutes) {
+  const normalized = ((minutes % MINUTES_IN_DAY) + MINUTES_IN_DAY) % MINUTES_IN_DAY;
+  const hrs = Math.floor(normalized / 60);
+  const mins = normalized % 60;
+  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+function extendIntervalsAcrossMidnight(todayIntervals, tomorrowIntervals) {
+  if (!Array.isArray(todayIntervals) || todayIntervals.length === 0) {
+    return [];
+  }
+  const extended = todayIntervals.map(interval => ({ ...interval }));
+  if (!Array.isArray(tomorrowIntervals) || tomorrowIntervals.length === 0) {
+    return extended;
+  }
+
+  const lastToday = extended[extended.length - 1];
+  if (!lastToday || lastToday.endMinutes < MINUTES_IN_DAY) {
+    return extended;
+  }
+
+  let currentEnd = lastToday.endMinutes;
+  if (currentEnd < MINUTES_IN_DAY) {
+    return extended;
+  }
+
+  for (const interval of tomorrowIntervals) {
+    const startAbs = MINUTES_IN_DAY + interval.startMinutes;
+    if (startAbs > currentEnd + 1) {
+      break;
+    }
+
+    const endAbs = MINUTES_IN_DAY + interval.endMinutes;
+    currentEnd = Math.max(currentEnd, endAbs);
+  }
+
+  if (currentEnd > lastToday.endMinutes) {
+    lastToday.endMinutes = currentEnd;
+    lastToday.endStr = formatTimeFromMinutes(currentEnd);
+    lastToday.durationMinutes = currentEnd - lastToday.startMinutes;
+    lastToday.durationStr = formatDurationShort(lastToday.durationMinutes);
+  }
+
+  return extended;
+}
+
 // Перевіряємо конфігурацію при запуску
 validateConfig();
 
@@ -74,7 +138,10 @@ async function monitor() {
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
-    const mergedTodayIntervals = mergeDisconnectionPeriods(schedule);
+    const mergedTodayIntervalsRaw = mergeDisconnectionPeriods(schedule);
+    const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule) : null;
+    const mergedTomorrowIntervals = processedTomorrowSchedule ? mergeDisconnectionPeriods(processedTomorrowSchedule.schedule) : [];
+    const mergedTodayIntervals = extendIntervalsAcrossMidnight(mergedTodayIntervalsRaw, mergedTomorrowIntervals);
     
     // Визначаємо чи є ранкове повідомлення (о 8:00)
     now = new Date();
@@ -135,22 +202,15 @@ async function monitor() {
     
     let reminderMessageSent = false;
     if (dueReminders.length > 0) {
-      console.log(`⏰ Наближаються відключення через ≤30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
-      let reminderMessage = `<b>🔔 Нагадування про відключення</b>\n\n`;
-      reminderMessage += `Через 30 хвилин очікується планове відключення.\n`;
-      reminderMessage += `Підготуйтесь: світла не буде за вказаними проміжками.\n\n`;
-      reminderMessage += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
-      reminderMessage += `⚡ Група: <b>${group.replace(/^GPV/, '')}</b>\n`;
-      reminderMessage += `🕐 Оновлено: ${factData.update}\n\n`;
-      reminderMessage += `🔜 Найближчі відключення:\n`;
-      dueReminders.forEach(({ interval }, idx) => {
-        const durationText = formatDurationForReminder(interval.durationMinutes);
-        reminderMessage += `${interval.startStr} - ${interval.endStr} · ${interval.durationStr}\n`;
-        reminderMessage += `Світла не буде ${durationText} до ${interval.endStr}.`;
-        if (idx !== dueReminders.length - 1) {
-          reminderMessage += `\n\n`;
-        }
-      });
+      console.log(`⏰ Найближчі відключення стартують менш ніж за 30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
+      let reminderMessage = `<b>🔔 Нагадування: Найближчі 30 хв очікуйте відключення за графіком</b>\n\n`;
+      const { interval } = dueReminders[0];
+      const durationText = formatDurationForReminder(interval.durationMinutes);
+      reminderMessage += `Планове відключення: ${interval.startStr} - ${interval.endStr} · ${interval.durationStr}\n`;
+      if (dueReminders.length > 1) {
+        const nextInterval = dueReminders[1].interval;
+        reminderMessage += `Наступне відключення: ${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}\n`;
+      }
       
       reminderMessageSent = await sendTelegramMessage(reminderMessage, true);
       if (reminderMessageSent) {
@@ -163,9 +223,11 @@ async function monitor() {
       }
     }
     
-    const updatedRemindersSentMap = {};
+    const updatedRemindersSentMap = { ...remindersRaw };
     if (todaysReminderSet.size > 0) {
       updatedRemindersSentMap[todayKey] = Array.from(todaysReminderSet);
+    } else {
+      delete updatedRemindersSentMap[todayKey];
     }
     
     // Планові повідомлення
@@ -223,7 +285,6 @@ async function monitor() {
       const scheduleSections = [];
       let addedToday = false;
       let addedTomorrow = false;
-      const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule).schedule : null;
 
       const pushTodaySection = () => {
         if (!addedToday) {
@@ -234,8 +295,8 @@ async function monitor() {
 
       const pushTomorrowSection = () => {
         if (!addedTomorrow) {
-          if (tomorrowSchedule) {
-            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule || [] });
+          if (processedTomorrowSchedule) {
+            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule.schedule || [] });
           } else {
             scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
           }
@@ -288,7 +349,11 @@ async function monitor() {
           title, 
           group, 
           scheduleSections, 
-          factData.update
+          factData.update,
+          {
+            filterPastToday: true,
+            hideEmptyTomorrowUntilAfternoon: true,
+          }
         );
         sent = await sendTelegramMessage(message, forceSilent);
       }

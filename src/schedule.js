@@ -1,5 +1,35 @@
 const { CONFIG } = require('./config');
 
+const MINUTES_IN_DAY = 24 * 60;
+
+function normalizeMinutes(minutes) {
+  const value = minutes % MINUTES_IN_DAY;
+  return value < 0 ? value + MINUTES_IN_DAY : value;
+}
+
+function formatMinutesOfDay(minutes) {
+  const normalized = normalizeMinutes(minutes);
+  const hrs = Math.floor(normalized / 60);
+  const mins = normalized % 60;
+  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+function formatDurationShort(minutes) {
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const parts = [];
+  if (hrs > 0) {
+    parts.push(`${hrs} год`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} хв`);
+  }
+  if (parts.length === 0) {
+    return '0 хв';
+  }
+  return parts.join(' ');
+}
+
 // Функції для обробки графіку
 function getTimeRange(hour) {
   const startHour = String(hour - 1).padStart(2, '0');
@@ -49,23 +79,6 @@ function mergeDisconnectionPeriods(scheduleData) {
     }
   };
 
-  const formatMinutes = (minutes) => {
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-  };
-
-  const formatDuration = (minutes) => {
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    const hrsPart = hrs > 0 ? `${hrs} год` : '';
-    const minsPart = mins > 0 ? `${mins} хв` : '';
-    if (hrsPart && minsPart) {
-      return `${hrsPart} ${minsPart}`;
-    }
-    return hrsPart || minsPart || '0 хв';
-  };
-
   const segments = [];
   const sorted = [...scheduleData].sort((a, b) => a.hour - b.hour);
   sorted.forEach((item) => {
@@ -94,17 +107,27 @@ function mergeDisconnectionPeriods(scheduleData) {
   return merged.map(({ start, end }) => ({
     startMinutes: start,
     endMinutes: end,
-    startStr: formatMinutes(start),
-    endStr: formatMinutes(end),
+    startStr: formatMinutesOfDay(start),
+    endStr: formatMinutesOfDay(end),
     durationMinutes: end - start,
-    durationStr: formatDuration(end - start),
+    durationStr: formatDurationShort(end - start),
   }));
 }
 
 // Функція для форматування графіку відключень
-function formatScheduleMessage(title, group, scheduleSections, updateTime) {
+function formatScheduleMessage(title, group, scheduleSections, updateTime, options = {}) {
   // Прибираємо префікс "GPV" з назви групи
   const groupDisplay = group.replace(/^GPV/, '');
+  const {
+    hideAddress = false,
+    hideGroup = false,
+    hideUpdate = false,
+    filterPastToday = false,
+    hideEmptyTomorrowUntilAfternoon = false,
+  } = options;
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const isBeforeAfternoon = now.getHours() < 13;
 
   let normalizedSections;
   if (Array.isArray(scheduleSections)) {
@@ -132,37 +155,52 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime) {
   }
 
   let message = `<b>${title}</b>\n\n`;
-  message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
-  message += `⚡ Група: <b>${groupDisplay}</b>\n`;
-  message += `🕐 Оновлено: ${updateTime}\n\n`;
+  if (!hideAddress) {
+    message += `📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`;
+  }
+  if (!hideGroup) {
+    message += `⚡ Група: <b>${groupDisplay}</b>\n`;
+  }
+  if (!hideUpdate) {
+    message += `🕐 Оновлено: ${updateTime}\n`;
+  }
+  message += `\n`;
 
   normalizedSections.forEach((section, index) => {
     const labelDisplay = section.label ? section.label.charAt(0).toUpperCase() + section.label.slice(1) : null;
     const labelSuffix = labelDisplay ? ` (${labelDisplay})` : '';
-    message += `<b>📅 Періоди відключення${labelSuffix}:</b>\n`;
+    const labelLower = (section.label || '').toLowerCase();
 
     const data = Array.isArray(section.scheduleData) ? section.scheduleData : [];
+    let intervals = mergeDisconnectionPeriods(data);
+
+    if (filterPastToday && labelLower.startsWith('сьогодні')) {
+      intervals = intervals.filter(interval => interval.endMinutes > nowMinutes);
+    }
+
+    if (
+      hideEmptyTomorrowUntilAfternoon &&
+      labelLower.startsWith('завтра') &&
+      isBeforeAfternoon &&
+      !section.note &&
+      intervals.length === 0
+    ) {
+      return;
+    }
+
+    message += `<b>📅 Періоди відключення${labelSuffix}:</b>\n`;
+
     if (section.note) {
       message += `${section.note}`;
-    } else if (!data.length) {
+    } else if (intervals.length === 0) {
       message += `✅ Відключень не заплановано`;
     } else {
-      const mergedPeriods = mergeDisconnectionPeriods(data);
-      if (mergedPeriods.length > 0) {
-        mergedPeriods.forEach((period, idx) => {
-          message += `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
-          if (idx !== mergedPeriods.length - 1) {
-            message += `\n`;
-          }
-        });
-      } else {
-        data.forEach(({ range, interpretation }, idx) => {
-          message += `${range}: ${interpretation}`;
-          if (idx !== data.length - 1) {
-            message += `\n`;
-          }
-        });
-      }
+      intervals.forEach((period, idx) => {
+        message += `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
+        if (idx !== intervals.length - 1) {
+          message += `\n`;
+        }
+      });
     }
 
     if (index !== normalizedSections.length - 1) {
