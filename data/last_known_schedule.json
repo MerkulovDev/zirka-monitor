@@ -115,10 +115,14 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-11-12T06:15:25.320Z",
+  "timestamp": "2025-11-12T06:49:21.870Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-12",
   "lastEveningReportDate": "2025-11-11",
   "lastNightReportDate": null,
-  "remindersSent": {}
+  "remindersSent": {
+    "2025-11-12": [
+      "540"
+    ]
+  }
 }
