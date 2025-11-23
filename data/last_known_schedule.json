@@ -103,7 +103,7 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2025-11-23T15:24:31.659Z",
+  "timestamp": "2025-11-23T15:41:20.800Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-12",
   "lastEveningReportDate": "2025-11-11",
@@ -111,6 +111,9 @@
   "remindersSent": {
     "2025-11-12": [
       "540"
+    ],
+    "2025-11-23": [
+      "1080"
     ]
   }
 }
