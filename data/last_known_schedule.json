@@ -1,30 +1,30 @@
 {
-  "update": "11.11.2025 19:54",
+  "update": "22.11.2025 19:12",
   "group": "GPV6.2",
   "fullSchedule": {
-    "1": "no",
-    "2": "no",
+    "1": "yes",
+    "2": "yes",
     "3": "yes",
     "4": "yes",
     "5": "yes",
     "6": "yes",
     "7": "yes",
-    "8": "yes",
-    "9": "yes",
+    "8": "second",
+    "9": "no",
     "10": "no",
     "11": "no",
-    "12": "no",
-    "13": "first",
+    "12": "yes",
+    "13": "yes",
     "14": "yes",
     "15": "yes",
     "16": "yes",
     "17": "yes",
     "18": "yes",
-    "19": "yes",
-    "20": "second",
+    "19": "no",
+    "20": "no",
     "21": "no",
-    "22": "no",
-    "23": "no",
+    "22": "first",
+    "23": "yes",
     "24": "yes"
   },
   "tomorrowSchedule": {
@@ -55,14 +55,14 @@
   },
   "schedule": [
     {
-      "hour": 1,
-      "range": "00:00-01:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "hour": 8,
+      "range": "07:00-08:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 07:30 до 08:00"
     },
     {
-      "hour": 2,
-      "range": "01:00-02:00",
+      "hour": 9,
+      "range": "08:00-09:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
     },
@@ -79,22 +79,16 @@
       "interpretation": "❌ Відключення весь проміжок"
     },
     {
-      "hour": 12,
-      "range": "11:00-12:00",
+      "hour": 19,
+      "range": "18:00-19:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
     },
     {
-      "hour": 13,
-      "range": "12:00-13:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 12:00 до 12:30"
-    },
-    {
       "hour": 20,
       "range": "19:00-20:00",
-      "value": "second",
-      "interpretation": "⚠️ Відключення з 19:30 до 20:00"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 21,
@@ -105,17 +99,11 @@
     {
       "hour": 22,
       "range": "21:00-22:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 23,
-      "range": "22:00-23:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2025-11-12T10:11:09.261Z",
+  "timestamp": "2025-11-23T08:51:55.007Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-12",
   "lastEveningReportDate": "2025-11-11",
