@@ -58,9 +58,23 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   const groupChanged = oldState.group !== newState.group;
   
   // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
-  const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
+  // ВАЖЛИВО: Якщо є вчорашній tomorrowSchedule, то він має стати сьогоднішнім fullSchedule
+  // Тому спочатку перевіряємо, чи новий сьогодні = вчорашньому завтра
+  let scheduleChanged = false;
   const newScheduleJson = JSON.stringify(newState.fullSchedule || {});
-  const scheduleChanged = oldScheduleJson !== newScheduleJson;
+  
+  if (oldState.tomorrowSchedule) {
+    // Якщо є вчорашній графік на завтра, порівнюємо його з новим сьогодні
+    const oldTomorrowJson = JSON.stringify(oldState.tomorrowSchedule || {});
+    scheduleChanged = oldTomorrowJson !== newScheduleJson;
+    if (!scheduleChanged) {
+      console.log('✅ Сьогоднішній графік співпадає з вчорашнім "завтра"');
+    }
+  } else {
+    // Якщо немає вчорашнього завтра, порівнюємо зі вчорашнім сьогодні
+    const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
+    scheduleChanged = oldScheduleJson !== newScheduleJson;
+  }
   
   // Порівнюємо графік на завтра
   let tomorrowChanged = false;
@@ -80,7 +94,7 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   if (scheduleChanged) {
     console.log('⚠️  Графіки відрізняються!');
     // Знаходимо різницю для логування
-    const oldSchedule = oldState.fullSchedule || {};
+    const oldSchedule = oldState.tomorrowSchedule || oldState.fullSchedule || {};
     const newSchedule = newState.fullSchedule || {};
     const differences = [];
     for (let hour = 1; hour <= 24; hour++) {
