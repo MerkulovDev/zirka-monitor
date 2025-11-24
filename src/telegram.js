@@ -38,7 +38,7 @@ function canSendMessage() {
 }
 
 // Функція для відправки повідомлення в Telegram
-async function sendTelegramMessage(message, silent = false) {
+async function sendTelegramMessage(message, silent = false, pinMessage = false) {
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
     console.log('⚠️  Telegram не налаштовано (відсутні TELEGRAM_BOT_TOKEN або TELEGRAM_CHAT_ID)');
     return false;
@@ -68,6 +68,13 @@ async function sendTelegramMessage(message, silent = false) {
     if (response.data.ok) {
       const silentText = (sendStatus.silent || silent) ? ' (беззвучно)' : '';
       console.log(`✅ Повідомлення відправлено в Telegram${silentText}`);
+      
+      // Закріплюємо повідомлення якщо потрібно
+      if (pinMessage) {
+        const messageId = response.data.result.message_id;
+        await pinTelegramMessage(messageId, true); // true = беззвучне закріплення
+      }
+      
       return true;
     } else {
       console.error('❌ Помилка відправки в Telegram:', response.data);
@@ -79,8 +86,37 @@ async function sendTelegramMessage(message, silent = false) {
   }
 }
 
+// Функція для закріплення повідомлення в Telegram
+async function pinTelegramMessage(messageId, silent = true) {
+  if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
+    console.log('⚠️  Telegram не налаштовано');
+    return false;
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/pinChatMessage`;
+    const response = await axios.post(url, {
+      chat_id: process.env.TELEGRAM_CHAT_ID,
+      message_id: messageId,
+      disable_notification: silent,
+    });
+
+    if (response.data.ok) {
+      console.log(`📌 Повідомлення закріплено`);
+      return true;
+    } else {
+      console.error('❌ Помилка закріплення:', response.data);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Помилка при закріпленні:', error.message);
+    return false;
+  }
+}
+
 module.exports = {
   canSendMessage,
   sendTelegramMessage,
+  pinTelegramMessage,
 };
 

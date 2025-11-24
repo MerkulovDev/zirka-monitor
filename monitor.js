@@ -143,13 +143,10 @@ async function monitor() {
     const mergedTomorrowIntervals = processedTomorrowSchedule ? mergeDisconnectionPeriods(processedTomorrowSchedule.schedule) : [];
     const mergedTodayIntervals = extendIntervalsAcrossMidnight(mergedTodayIntervalsRaw, mergedTomorrowIntervals);
     
-    // Визначаємо чи є ранкове повідомлення (о 8:00)
+    // Визначаємо поточний час
     now = new Date();
     hour = now.getHours();
     minutes = now.getMinutes();
-    const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20
-    const isNightReport = hour === 4 && minutes < 20; // О 4:00-4:20
-    const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20
     const isQuietHours = hour >= 23 || hour < 8;
     const nowMinutes = hour * 60 + minutes;
     const todayKey = getLocalDateKey(now);
@@ -168,19 +165,6 @@ async function monitor() {
     );
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
-
-    let shouldSendNightReport = false;
-    if (isNightReport) {
-      const lastNightDate = lastState?.lastNightReportDate || null;
-      if (lastNightDate === todayKey) {
-        console.log('🌙 Нічний звіт уже відправлено сьогодні.');
-      } else if (comparison.changed) {
-        shouldSendNightReport = true;
-        console.log('🌙 Нічний моніторинг: зафіксовано зміни, готуємо беззвучне повідомлення.');
-      } else {
-        console.log('🌙 Нічний моніторинг: змін немає, повідомлення не надсилаємо.');
-      }
-    }
     
     // Логіка нагадувань за 30 хвилин до відключення
     const remindersRaw = lastState && typeof lastState.remindersSent === 'object' && !Array.isArray(lastState.remindersSent)
@@ -230,146 +214,61 @@ async function monitor() {
       delete updatedRemindersSentMap[todayKey];
     }
     
-    // Планові повідомлення
-    let shouldSendMorningReport = false;
-    if (isMorningReport) {
-      const lastMorningDate = lastState?.lastMorningReportDate || null;
-      if (lastMorningDate === todayKey) {
-        console.log('☀️ Ранковий звіт уже відправлено сьогодні.');
-      } else {
-        shouldSendMorningReport = true;
-        console.log('☀️ Плановий ранковий звіт о 08:00.');
-      }
-    }
-
-    let shouldSendEveningReport = false;
-    if (isEveningReport) {
-      const lastEveningDate = lastState?.lastEveningReportDate || null;
-      if (lastEveningDate === todayKey) {
-        console.log('🌆 Вечірнє інформування вже відправлено сьогодні.');
-      } else {
-        shouldSendEveningReport = true;
-        console.log('🌆 Планове інформування о 21:00.');
-      }
-    }
-    
-    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
+    // Відправляємо повідомлення тільки при реальних змінах графіку
+    if (comparison.changed) {
       let title;
-      let pendingLog;
-      if (shouldSendMorningReport) {
-        title = '🔌 Нагадування графіку на сьогодні';
-        pendingLog = '📅 Відправляємо ранкове повідомлення...';
-      } else if (shouldSendNightReport) {
-        title = '🔌 Нічне оновлення графіку';
-        pendingLog = '🌙 Відправляємо нічне повідомлення...';
-      } else if (shouldSendEveningReport) {
-        title = '🔌 Нагадування графіку на завтра';
-        pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
-      } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
+      if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
         title = '🔌 Групу оновлено';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.scheduleChanged && comparison.tomorrowChanged) {
         title = '🔌 Графік оновлено на сьогодні і завтра';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.scheduleChanged) {
         title = '🔌 Графік оновлено на сьогодні';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.tomorrowChanged) {
         title = '🔌 Графік оновлено на завтра';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else {
         title = '🔌 Оновлення графіку відключень';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
-      }
-
-      const scheduleSections = [];
-      let addedToday = false;
-      let addedTomorrow = false;
-
-      const pushTodaySection = () => {
-        if (!addedToday) {
-          scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
-          addedToday = true;
-        }
-      };
-
-      const pushTomorrowSection = () => {
-        if (!addedTomorrow) {
-          if (processedTomorrowSchedule) {
-            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule.schedule || [] });
-          } else {
-            scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
-          }
-          addedTomorrow = true;
-        }
-      };
-
-      if (shouldSendMorningReport) {
-        pushTodaySection();
-      }
-
-      if (shouldSendEveningReport) {
-        pushTomorrowSection();
-      }
-      if (shouldSendNightReport && comparison.tomorrowChanged) {
-        pushTomorrowSection();
-      }
-
-      if (!addedToday && comparison.scheduleChanged) {
-        pushTodaySection();
-      }
-
-      if (!addedTomorrow && comparison.tomorrowChanged) {
-        pushTomorrowSection();
-      }
-
-      if (scheduleSections.length === 0) {
-        pushTodaySection();
-      }
-
-      const lastEveningTomorrow = lastState?.tomorrowSchedule || null;
-      const todaysFullScheduleJson = JSON.stringify(fullSchedule || {});
-      const lastEveningTomorrowJson = JSON.stringify(lastEveningTomorrow || {});
-      const isMorningSameAsLastEvening = shouldSendMorningReport && lastEveningTomorrow && todaysFullScheduleJson === lastEveningTomorrowJson;
-
-      if (shouldSendNightReport) {
-        console.log('🔇 Нічне повідомлення буде відправлено беззвучно.');
-      } else if (isMorningSameAsLastEvening) {
-        console.log('🔇 Ранковий графік не змінився відносно вчорашнього вечірнього. Відправляємо беззвучно.');
-      }
-
-      const forceSilent = isMorningSameAsLastEvening || shouldSendNightReport;
-
-      let sent = false;
-      if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport && !shouldSendNightReport) {
-        console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
-      } else {
-        console.log(pendingLog);
-        const message = formatScheduleMessage(
-          title, 
-          group, 
-          scheduleSections, 
-          factData.update,
-          {
-            filterPastToday: true,
-            hideEmptyTomorrowUntilAfternoon: true,
-          }
-        );
-        sent = await sendTelegramMessage(message, forceSilent);
       }
       
-      const updatedLastMorningReportDate = sent && shouldSendMorningReport
-        ? todayKey
-        : lastState?.lastMorningReportDate || null;
-      const updatedLastEveningReportDate = sent && shouldSendEveningReport
-        ? todayKey
-        : lastState?.lastEveningReportDate || null;
-      const updatedLastNightReportDate = sent && shouldSendNightReport
-        ? todayKey
-        : lastState?.lastNightReportDate || null;
-      const updatedLastMessageIn6to8 = shouldSendMorningReport
-        ? sent
-        : lastState?.lastMessageIn6to8 || false;
+      console.log('📢 Виявлено зміни! Відправляємо повідомлення та закріплюємо його...');
+
+      // Формуємо розділи повідомлення в залежності від того, що змінилось
+      const scheduleSections = [];
+      
+      if (comparison.scheduleChanged) {
+        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+      }
+      
+      if (comparison.tomorrowChanged) {
+        if (processedTomorrowSchedule) {
+          scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule.schedule || [] });
+        } else {
+          scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
+        }
+      }
+      
+      // Якщо нічого не змінилось, але comparison.changed = true (наприклад, група), показуємо сьогодні
+      if (scheduleSections.length === 0) {
+        scheduleSections.push({ label: 'сьогодні', scheduleData: schedule });
+      }
+
+      // Формуємо і відправляємо повідомлення
+      const message = formatScheduleMessage(
+        title, 
+        group, 
+        scheduleSections, 
+        factData.update,
+        {
+          filterPastToday: true,
+          hideEmptyTomorrowUntilAfternoon: true,
+        }
+      );
+      
+      // Визначаємо чи треба тихо відправити (тихі години)
+      const sendStatus = require('./src/telegram').canSendMessage();
+      const silent = sendStatus.silent || isQuietHours;
+      
+      // Відправляємо та закріплюємо повідомлення
+      const sent = await sendTelegramMessage(message, silent, true); // true = закріпити
 
       // Формуємо поточний стан з повним графіком
       const currentState = {
@@ -379,10 +278,6 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: updatedLastMessageIn6to8,
-        lastMorningReportDate: updatedLastMorningReportDate,
-        lastEveningReportDate: updatedLastEveningReportDate,
-        lastNightReportDate: updatedLastNightReportDate,
         remindersSent: updatedRemindersSentMap
       };
       
@@ -399,10 +294,6 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: lastState?.lastMessageIn6to8 || false,
-        lastMorningReportDate: lastState?.lastMorningReportDate || null,
-        lastEveningReportDate: lastState?.lastEveningReportDate || null,
-        lastNightReportDate: lastState?.lastNightReportDate || null,
         remindersSent: updatedRemindersSentMap
       };
       saveState(currentState);

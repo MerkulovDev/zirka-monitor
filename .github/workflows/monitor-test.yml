@@ -1,0 +1,66 @@
+name: Monitor Test (Pinned Messages)
+
+on:
+  schedule:
+    # Запуск кожні 15 хвилин для тестування
+    - cron: '*/15 * * * *'
+  
+  # Дозволяємо ручний запуск
+  workflow_dispatch:
+  
+  # Запуск при push в тестову гілку
+  push:
+    branches:
+      - test/pinned-messages
+
+jobs:
+  monitor-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: test/pinned-messages
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create data directory
+        run: mkdir -p data
+      
+      - name: Run monitor script (TEST)
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_TEST }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_TEST }}
+          ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
+          ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
+          ADDRESS_HOUSE: ${{ secrets.ADDRESS_HOUSE }}
+          TZ: Europe/Kyiv
+        run: node monitor.js
+      
+      - name: Commit and push state file
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action (TEST)"
+          
+          # Завжди комітимо файл стану, якщо він змінився
+          if [ -f data/last_known_schedule.json ]; then
+            git add data/last_known_schedule.json
+            if [ -n "$(git status --porcelain data/)" ]; then
+              git commit -m "🧪 TEST: Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+              git push || echo "Nothing to push"
+            else
+              echo "State file unchanged"
+            fi
+          else
+            echo "State file not found"
+          fi
+
