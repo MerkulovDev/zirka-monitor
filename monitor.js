@@ -257,13 +257,13 @@ async function monitor() {
       let title;
       let pendingLog;
       if (shouldSendMorningReport) {
-        title = '🔌 Графік на сьогодні';
+        title = '🔌 Нагадування графіку на сьогодні';
         pendingLog = '📅 Відправляємо ранкове повідомлення...';
       } else if (shouldSendNightReport) {
         title = '🔌 Нічне оновлення графіку';
         pendingLog = '🌙 Відправляємо нічне повідомлення...';
       } else if (shouldSendEveningReport) {
-        title = '🔌 Графік на завтра';
+        title = '🔌 Нагадування графіку на завтра';
         pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
       } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
         title = '🔌 Групу оновлено';
