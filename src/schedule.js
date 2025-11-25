@@ -124,6 +124,7 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
     hideUpdate = false,
     filterPastToday = false,
     hideEmptyTomorrowUntilAfternoon = false,
+    highlightChanges = false,
   } = options;
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -196,7 +197,9 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
       message += `✅ Відключень не заплановано`;
     } else {
       intervals.forEach((period, idx) => {
-        message += `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
+        const periodText = `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
+        // Виділяємо жирним якщо це оновлення графіку (не плановий звіт)
+        message += highlightChanges ? `<b>${periodText}</b>` : periodText;
         if (idx !== intervals.length - 1) {
           message += `\n`;
         }

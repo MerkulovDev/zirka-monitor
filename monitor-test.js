@@ -171,12 +171,19 @@ async function monitor() {
       
       let reminderMessage = `<b>🔔 Нагадування: Найближчі 30 хв очікуйте відключення за графіком</b>\n\n`;
       
-      // Показуємо всі планові відключення
-      for (let i = 0; i < dueReminders.length; i++) {
-        const interval = dueReminders[i].interval;
-        reminderMessage += `Планове відключення: ${interval.startStr} - ${interval.endStr} · ${interval.durationStr}`;
-        if (i !== dueReminders.length - 1) {
-          reminderMessage += `\n`;
+      // Перше відключення - жирним
+      const firstInterval = dueReminders[0].interval;
+      reminderMessage += `<b>Планове відключення: ${firstInterval.startStr} - ${firstInterval.endStr} · ${firstInterval.durationStr}</b>\n`;
+      
+      // Якщо є наступні відключення
+      if (dueReminders.length > 1) {
+        reminderMessage += `\n<b>🔜 Наступні відключення:</b>\n`;
+        for (let i = 1; i < dueReminders.length; i++) {
+          const interval = dueReminders[i].interval;
+          reminderMessage += `${interval.startStr} - ${interval.endStr} · ${interval.durationStr}`;
+          if (i !== dueReminders.length - 1) {
+            reminderMessage += `\n`;
+          }
         }
       }
       
@@ -289,11 +296,14 @@ async function monitor() {
       }
 
       // Формуємо і відправляємо повідомлення
+      // Виділяємо жирним періоди відключень якщо це оновлення (не плановий звіт)
+      const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport;
       const message = formatScheduleMessage(
         title, 
         group, 
         scheduleSections, 
-        factData.update
+        factData.update,
+        { highlightChanges: isUpdate }
       );
       
       // Беззвучно: вночі (2-4) або в тихі години (23:00-8:00)
