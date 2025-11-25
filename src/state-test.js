@@ -46,6 +46,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
       groupChanged: false, 
       scheduleChanged: true,
       tomorrowChanged: tomorrowSchedule !== null,
+      changedHours: [],
+      changedTomorrowHours: [],
       reason: 'Перший запуск' 
     };
   }
@@ -70,6 +72,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
       groupChanged: false, 
       scheduleChanged: false,
       tomorrowChanged: false,
+      changedHours: [],
+      changedTomorrowHours: [],
       reason: 'Дата оновлення і група не змінились' 
     };
   }
@@ -81,6 +85,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
       groupChanged: true,
       scheduleChanged: false,
       tomorrowChanged: false,
+      changedHours: [],
+      changedTomorrowHours: [],
       title: '🔌 Група змінена',
       reason: 'Змінилась група'
     };
@@ -110,9 +116,10 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
     console.log('  ⚠️  Група змінилась!');
   }
   
+  // Знаходимо які години змінились (для виділення тільки змінених періодів)
+  const changedHours = [];
   if (scheduleChanged) {
     console.log('  ⚠️  Графік на сьогодні змінився!');
-    // Знаходимо різницю для логування
     const oldSchedule = oldState.fullSchedule || {};
     const newSchedule = newState.fullSchedule || {};
     const differences = [];
@@ -120,10 +127,27 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
       const h = String(hour);
       if (oldSchedule[h] !== newSchedule[h]) {
         differences.push(`Година ${h}: "${oldSchedule[h]}" → "${newSchedule[h]}"`);
+        changedHours.push(hour); // Зберігаємо змінені години
       }
     }
     if (differences.length > 0) {
       console.log('    Різниці:', differences.join(', '));
+    }
+  }
+  
+  // Знаходимо які години змінились в завтрашньому графіку
+  const changedTomorrowHours = [];
+  if (tomorrowChanged && tomorrowSchedule && oldTomorrowSchedule) {
+    const differences = [];
+    for (let hour = 1; hour <= 24; hour++) {
+      const h = String(hour);
+      if (oldTomorrowSchedule[h] !== tomorrowSchedule[h]) {
+        differences.push(`Година ${h}: "${oldTomorrowSchedule[h]}" → "${tomorrowSchedule[h]}"`);
+        changedTomorrowHours.push(hour);
+      }
+    }
+    if (differences.length > 0) {
+      console.log('    Різниці в завтра:', differences.join(', '));
     }
   }
 
@@ -134,6 +158,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
       groupChanged: false, 
       scheduleChanged: false,
       tomorrowChanged: false,
+      changedHours: [],
+      changedTomorrowHours: [],
       reason: 'Дата оновилась, але зміст графіків не змінився' 
     };
   }
@@ -157,6 +183,8 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
     groupChanged, 
     scheduleChanged,
     tomorrowChanged,
+    changedHours: changedHours, // Які години змінились на сьогодні
+    changedTomorrowHours: changedTomorrowHours, // Які години змінились на завтра
     title,
     reason: groupChanged && scheduleChanged ? 'Змінилась група і графік' : 
             groupChanged ? 'Змінилась група' : 

@@ -296,14 +296,18 @@ async function monitor() {
       }
 
       // Формуємо і відправляємо повідомлення
-      // Виділяємо жирним періоди відключень якщо це оновлення (не плановий звіт)
+      // Виділяємо жирним ТІЛЬКИ ті періоди що містять зміни (не плановий звіт)
       const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport;
       const message = formatScheduleMessage(
         title, 
         group, 
         scheduleSections, 
         factData.update,
-        { highlightChanges: isUpdate }
+        { 
+          highlightChanges: isUpdate,
+          changedHours: comparison.changedHours || [],
+          changedTomorrowHours: comparison.changedTomorrowHours || []
+        }
       );
       
       // Беззвучно: вночі (2-4) або в тихі години (23:00-8:00)

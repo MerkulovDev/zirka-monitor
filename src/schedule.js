@@ -125,6 +125,8 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
     filterPastToday = false,
     hideEmptyTomorrowUntilAfternoon = false,
     highlightChanges = false,
+    changedHours = [], // Години які змінились для сьогодні
+    changedTomorrowHours = [], // Години які змінились для завтра
   } = options;
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -196,10 +198,29 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
     } else if (intervals.length === 0) {
       message += `✅ Відключень не заплановано`;
     } else {
+      // Визначаємо які години змінились для цієї секції
+      const relevantChangedHours = labelLower.startsWith('завтра') ? changedTomorrowHours : changedHours;
+      
       intervals.forEach((period, idx) => {
         const periodText = `${period.startStr} - ${period.endStr} · ${period.durationStr}`;
-        // Виділяємо жирним якщо це оновлення графіку (не плановий звіт)
-        message += highlightChanges ? `<b>${periodText}</b>` : periodText;
+        
+        // Перевіряємо чи інтервал містить змінену годину
+        let isChanged = false;
+        if (highlightChanges && relevantChangedHours.length > 0) {
+          // Перевіряємо чи хоча б одна змінена година потрапляє в цей інтервал
+          for (const hour of relevantChangedHours) {
+            const hourStart = (hour - 1) * 60; // Година 13 = 720 хв (12:00)
+            const hourEnd = hour * 60;         // Година 13 = 780 хв (13:00)
+            // Перевіряємо перетин інтервалів
+            if (hourStart < period.endMinutes && hourEnd > period.startMinutes) {
+              isChanged = true;
+              break;
+            }
+          }
+        }
+        
+        // Виділяємо жирним тільки якщо період містить зміни
+        message += isChanged ? `<b>${periodText}</b>` : periodText;
         if (idx !== intervals.length - 1) {
           message += `\n`;
         }
