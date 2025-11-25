@@ -168,22 +168,15 @@ async function monitor() {
     let reminderMessageSent = false;
     if (dueReminders.length > 0) {
       console.log(`⏰ Наближаються відключення через ≤30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
-      const firstInterval = dueReminders[0].interval;
-      const firstDurationText = formatDurationForReminder(firstInterval.durationMinutes);
       
-      let reminderMessage = `<b>🔔 Нагадування про відключення</b>\n\n`;
-      reminderMessage += `В найближчі 30 хвилин очікується планове відключення.\n\n`;
-      reminderMessage += `Підготуйтесь: Світла не буде ${firstDurationText} до ${firstInterval.endStr}.\n`;
+      let reminderMessage = `<b>🔔 Нагадування: Найближчі 30 хв очікуйте відключення за графіком</b>\n\n`;
       
-      // Якщо є наступні відключення, показуємо їх
-      if (dueReminders.length > 1) {
-        reminderMessage += `\n<b>🔜 Наступні відключення:</b>\n`;
-        for (let i = 1; i < dueReminders.length; i++) {
-          const interval = dueReminders[i].interval;
-          reminderMessage += `${interval.startStr} - ${interval.endStr} · ${interval.durationStr}`;
-          if (i !== dueReminders.length - 1) {
-            reminderMessage += `\n`;
-          }
+      // Показуємо всі планові відключення
+      for (let i = 0; i < dueReminders.length; i++) {
+        const interval = dueReminders[i].interval;
+        reminderMessage += `Планове відключення: ${interval.startStr} - ${interval.endStr} · ${interval.durationStr}`;
+        if (i !== dueReminders.length - 1) {
+          reminderMessage += `\n`;
         }
       }
       
