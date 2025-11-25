@@ -1,0 +1,64 @@
+name: Monitor TEST (Pinned Messages)
+
+on:
+  schedule:
+    # Запускає кожні 15 хвилин
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Можна запустити вручну
+
+jobs:
+  monitor-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create data directory
+        run: mkdir -p data
+      
+      - name: Run monitor-test script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_TEST }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_TEST }}
+          ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
+          ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
+          ADDRESS_HOUSE: ${{ secrets.ADDRESS_HOUSE }}
+          TZ: Europe/Kyiv
+        run: node monitor-test.js
+      
+      - name: Commit and push test state file
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action TEST"
+          
+          # Завжди комітимо файл стану, якщо він змінився
+          if [ -f data/last_known_schedule_test.json ]; then
+            git add data/last_known_schedule_test.json
+            if [ -n "$(git status --porcelain data/)" ]; then
+              git commit -m "🧪 TEST: Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+              git push || echo "Nothing to push"
+            else
+              echo "Test state file unchanged"
+            fi
+          else
+            echo "Test state file not found"
+          fi
+
