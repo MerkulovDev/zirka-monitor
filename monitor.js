@@ -304,27 +304,30 @@ async function monitor() {
         }
       };
 
+      // Логіка показу секцій
       if (shouldSendMorningReport) {
+        // Ранковий звіт - завжди показуємо ТІЛЬКИ сьогодні
         pushTodaySection();
-      }
-
-      if (shouldSendEveningReport) {
+      } else if (shouldSendEveningReport) {
+        // Вечірній звіт - завжди показуємо ТІЛЬКИ завтра
         pushTomorrowSection();
-      }
-      if (shouldSendNightReport && comparison.tomorrowChanged) {
-        pushTomorrowSection();
-      }
+      } else {
+        // Звичайні оновлення та нічні звіти - показуємо що змінилось
+        if (shouldSendNightReport && comparison.tomorrowChanged) {
+          pushTomorrowSection();
+        }
 
-      if (!addedToday && comparison.scheduleChanged) {
-        pushTodaySection();
-      }
+        if (!addedToday && comparison.scheduleChanged) {
+          pushTodaySection();
+        }
 
-      if (!addedTomorrow && comparison.tomorrowChanged) {
-        pushTomorrowSection();
-      }
+        if (!addedTomorrow && comparison.tomorrowChanged) {
+          pushTomorrowSection();
+        }
 
-      if (scheduleSections.length === 0) {
-        pushTodaySection();
+        if (scheduleSections.length === 0) {
+          pushTodaySection();
+        }
       }
 
       const lastEveningTomorrow = lastState?.tomorrowSchedule || null;
