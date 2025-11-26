@@ -271,6 +271,26 @@ async function monitor() {
       } else {
         console.log(`ℹ️  Наступний період ${nextInterval.startStr}-${nextInterval.endStr} вже почався, повідомлення не відправляємо`);
       }
+    } else if (justEndedInterval && !nextInterval) {
+      // Період закінчився, але наступного немає
+      const noMoreKey = 'no-more-today';
+      if (!todaysNextOutageSet.has(noMoreKey)) {
+        console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} закінчився, більше відключень на сьогодні не заплановано`);
+        
+        const noMoreMessage = `<b>✅ Більше відключень на сьогодні не заплановано</b>`;
+        
+        // Беззвучно вночі (23:00-8:00)
+        const silent = isQuietHours;
+        nextOutageMessageSent = await sendTelegramMessage(noMoreMessage, silent, false);
+        if (nextOutageMessageSent) {
+          console.log('✅ Повідомлення про відсутність подальших відключень надіслано');
+          todaysNextOutageSet.add(noMoreKey);
+        } else {
+          console.log('⚠️ Повідомлення не вдалося надіслати');
+        }
+      } else {
+        console.log('ℹ️  Повідомлення про відсутність подальших відключень вже було відправлено');
+      }
     }
     
     const updatedNextOutageMap = {};
