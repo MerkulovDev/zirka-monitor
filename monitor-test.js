@@ -105,29 +105,16 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
 
-    // Перевіряємо чи потрібне нагадування (якщо від останньої зміни пройшло більше 5 годин)
-    let shouldSendReminder = false;
+    // Перевіряємо скільки часу пройшло від останньої зміни на сьогодні
     const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
     const hoursSinceLastChange = lastTodayChangeTimestamp 
       ? (now.getTime() - new Date(lastTodayChangeTimestamp).getTime()) / (1000 * 60 * 60)
       : 999; // Якщо не було змін - вважаємо що давно
-    
-    if (!comparison.scheduleChanged && hoursSinceLastChange >= 5) {
-      const lastReminderDate = lastState?.lastReminderDate || null;
-      const lastMorningDate = lastState?.lastMorningReportDate || null;
-      
-      if (lastReminderDate === todayKey) {
-        console.log('🔔 Нагадування вже відправлено сьогодні.');
-      } else if (lastMorningDate === todayKey) {
-        console.log('🔔 Ранкове повідомлення вже було сьогодні, нагадування не потрібне.');
-      } else {
-        shouldSendReminder = true;
-        console.log(`🔔 Від останньої зміни пройшло ${hoursSinceLastChange.toFixed(1)} годин (>5), відправляємо нагадування.`);
-      }
-    }
 
     // Ранковий звіт о 8:00 про графік на сьогодні
-    // ТІЛЬКИ якщо немає змін на сьогодні (інакше відправимо оновлення)
+    // Відправляємо ТІЛЬКИ якщо:
+    // 1. Немає змін зараз
+    // 2. Останні зміни були більше 5 годин тому (або не було взагалі)
     let shouldSendMorningReport = false;
     const isMorningWindow = isMorningReport;
     if (isMorningReport) {
@@ -137,9 +124,11 @@ async function monitor() {
       } else if (comparison.scheduleChanged) {
         console.log('☀️ Ранок: графік на сьогодні змінився, відправимо як оновлення (це і є ранкове повідомлення).');
         // Не встановлюємо shouldSendMorningReport, бо відправимо оновлення
+      } else if (hoursSinceLastChange < 5) {
+        console.log(`☀️ Ранок: останні зміни були ${hoursSinceLastChange.toFixed(1)} год тому (<5), ранкове нагадування не потрібне.`);
       } else {
         shouldSendMorningReport = true;
-        console.log('☀️ Ранок: графік не змінився, відправимо щоденне нагадування.');
+        console.log(`☀️ Ранок: останні зміни ${hoursSinceLastChange.toFixed(1)} год тому (>5), відправимо ранкове нагадування.`);
       }
     }
 
@@ -226,17 +215,12 @@ async function monitor() {
     }
     
     // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
-    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport || shouldSendReminder) {
+    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
       let title;
       
-      // Нагадування (після 5 годин без змін)
-      if (shouldSendReminder) {
-        title = '🔌 Нагадування графіку на сьогодні';
-      }
-      // Ранковий звіт о 8:00 - завжди просто "Графік на сьогодні"
-      // (не "оновлено", бо це плановий звіт, а не реакція на зміни)
+      // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
       else if (shouldSendMorningReport) {
-        title = '🔌 Графік на сьогодні';
+        title = '🔌 Нагадування графіку на сьогодні';
       }
       // Вечірній звіт о 21:00 - завжди просто "Графік на завтра"
       // (не "оновлено", бо це плановий звіт, а не реакція на зміни)
@@ -262,11 +246,10 @@ async function monitor() {
       
       // Визначаємо чи закріплювати повідомлення
       // Закріплюємо ВСІ оновлення графіку "на сьогодні":
-      // 1. Ранковий звіт о 8:00 (завжди закріплюємо)
-      // 2. Нагадування (після 5 годин без змін, беззвучно закріплюємо)
-      // 3. Зміни графіку на сьогодні (в будь-який час, включно з нічними оновленнями)
+      // 1. Ранковий звіт о 8:00 (ранкове нагадування, беззвучно закріплюємо)
+      // 2. Зміни графіку на сьогодні (в будь-який час, включно з нічними оновленнями)
       // НЕ закріплюємо: зміни графіку на "завтра", вечірній звіт, зміни групи
-      const shouldPin = shouldSendMorningReport || shouldSendReminder || comparison.scheduleChanged;
+      const shouldPin = shouldSendMorningReport || comparison.scheduleChanged;
       
       if (shouldPin) {
         if (shouldSendNightReport || isQuietHours) {
@@ -302,11 +285,8 @@ async function monitor() {
       };
 
       // Логіка показу секцій
-      if (shouldSendReminder) {
-        // Нагадування - показуємо тільки сьогодні БЕЗ пройдених періодів
-        pushTodaySection();
-      } else if (shouldSendMorningReport) {
-        // Ранковий звіт - завжди показуємо тільки сьогодні
+      if (shouldSendMorningReport) {
+        // Ранковий звіт - завжди показуємо тільки сьогодні БЕЗ пройдених періодів
         pushTodaySection();
       } else if (shouldSendEveningReport) {
         // Вечірній звіт - завжди показуємо тільки завтра
@@ -327,7 +307,7 @@ async function monitor() {
 
       // Формуємо і відправляємо повідомлення
       // Виділяємо жирним ТІЛЬКИ ті періоди що містять зміни (не плановий звіт)
-      const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport && !shouldSendReminder;
+      const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport;
       const message = formatScheduleMessage(
         title, 
         group, 
@@ -337,12 +317,12 @@ async function monitor() {
           highlightChanges: isUpdate,
           changedHours: comparison.changedHours || [],
           changedTomorrowHours: comparison.changedTomorrowHours || [],
-          filterPastToday: shouldSendReminder // Фільтруємо пройдені періоди для нагадування
+          filterPastToday: shouldSendMorningReport // Фільтруємо пройдені періоди для ранкового нагадування
         }
       );
       
-      // Беззвучно: нагадування, вночі (2-4) або в тихі години (23:00-8:00)
-      const forceSilent = shouldSendReminder || shouldSendNightReport || isQuietHours;
+      // Беззвучно: ранкове нагадування, вночі (2-4) або в тихі години (23:00-8:00)
+      const forceSilent = shouldSendMorningReport || shouldSendNightReport || isQuietHours;
       if (forceSilent) {
         console.log('🔇 Повідомлення буде відправлено беззвучно.');
       }
@@ -359,12 +339,11 @@ async function monitor() {
         schedule: schedule,
         timestamp: new Date().toISOString(),
         // Ранкове повідомлення відправлено якщо:
-        // 1. Відправили ранковий звіт (shouldSendMorningReport)
+        // 1. Відправили ранкове нагадування (shouldSendMorningReport)
         // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
         lastMorningReportDate: sent && (shouldSendMorningReport || (isMorningWindow && comparison.scheduleChanged)) ? todayKey : (lastState?.lastMorningReportDate || null),
         lastEveningReportDate: sent && shouldSendEveningReport ? todayKey : (lastState?.lastEveningReportDate || null),
         lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
-        lastReminderDate: sent && shouldSendReminder ? todayKey : (lastState?.lastReminderDate || null),
         lastTodayChangeTimestamp: comparison.scheduleChanged ? new Date().toISOString() : (lastState?.lastTodayChangeTimestamp || null),
         remindersSent: updatedRemindersSentMap
       };
@@ -385,7 +364,6 @@ async function monitor() {
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
-        lastReminderDate: lastState?.lastReminderDate || null,
         lastTodayChangeTimestamp: lastState?.lastTodayChangeTimestamp || null,
         remindersSent: updatedRemindersSentMap
       };
