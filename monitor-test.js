@@ -116,7 +116,6 @@ async function monitor() {
     // 1. Немає змін зараз
     // 2. Останні зміни були більше 5 годин тому (або не було взагалі)
     let shouldSendMorningReport = false;
-    const isMorningWindow = isMorningReport;
     if (isMorningReport) {
       const lastMorningDate = lastState?.lastMorningReportDate || null;
       if (lastMorningDate === todayKey) {
