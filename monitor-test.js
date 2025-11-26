@@ -221,21 +221,26 @@ async function monitor() {
       Array.isArray(nextOutageNotificationsRaw[todayKey]) ? nextOutageNotificationsRaw[todayKey] : []
     );
     
-    // Шукаємо період що щойно закінчився (в межах 5-30 хв після завершення)
+    // Шукаємо період що вже закінчився і є наступний період
+    // Логіка: якщо зараз між двома відключеннями - повідомляємо про наступне (якщо ще не повідомляли)
     let justEndedInterval = null;
     let nextInterval = null;
     for (let i = 0; i < mergedTodayIntervals.length; i++) {
       const interval = mergedTodayIntervals[i];
       const diffFromEnd = nowMinutes - interval.endMinutes;
       
-      // Період закінчився 5-30 хв тому
-      if (diffFromEnd >= 5 && diffFromEnd <= 30) {
-        justEndedInterval = interval;
-        // Беремо наступний період якщо він є
+      // Період вже закінчився (мінімум 5 хв тому)
+      if (diffFromEnd >= 5) {
+        // Перевіряємо чи є наступний період
         if (i + 1 < mergedTodayIntervals.length) {
-          nextInterval = mergedTodayIntervals[i + 1];
+          const next = mergedTodayIntervals[i + 1];
+          // Якщо наступний період ще не почався - це наш кандидат
+          if (nowMinutes < next.startMinutes) {
+            justEndedInterval = interval;
+            nextInterval = next;
+            break; // Знайшли, виходимо
+          }
         }
-        break;
       }
     }
     
