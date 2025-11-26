@@ -91,7 +91,7 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-11-26T06:15:38.566Z",
+  "timestamp": "2025-11-26T06:47:40.766Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-26",
   "lastEveningReportDate": "2025-11-25",
@@ -103,6 +103,9 @@
     "2025-11-25": [
       "720",
       "1350"
+    ],
+    "2025-11-26": [
+      "540"
     ]
   }
 }
