@@ -278,7 +278,7 @@ async function monitor() {
       let title;
       
       // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
-      else if (shouldSendMorningReport) {
+      if (shouldSendMorningReport) {
         title = '🔌 Нагадування графіку на сьогодні';
       }
       // Вечірній звіт о 21:00 - завжди просто "Графік на завтра"
