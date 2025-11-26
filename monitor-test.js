@@ -277,7 +277,7 @@ async function monitor() {
       if (!todaysNextOutageSet.has(noMoreKey)) {
         console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} закінчився, більше відключень на сьогодні не заплановано`);
         
-        const noMoreMessage = `<b>✅ Більше відключень на сьогодні не заплановано</b>`;
+        const noMoreMessage = `<b>🔋 Наразі відключень на сьогодні більше не заплановано 😌✨</b>\n\nЯкщо щось зміниться — одразу повідомимо!`;
         
         // Беззвучно вночі (23:00-8:00)
         const silent = isQuietHours;
