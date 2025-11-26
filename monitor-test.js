@@ -214,6 +214,57 @@ async function monitor() {
       updatedRemindersSentMap[todayKey] = Array.from(todaysReminderSet);
     }
     
+    // Логіка "Наступне планове відключення" після закінчення поточного
+    const nextOutageNotificationsRaw = lastState && typeof lastState.nextOutageNotificationsSent === 'object' && !Array.isArray(lastState.nextOutageNotificationsSent)
+      ? { ...lastState.nextOutageNotificationsSent }
+      : {};
+    const todaysNextOutageSet = new Set(
+      Array.isArray(nextOutageNotificationsRaw[todayKey]) ? nextOutageNotificationsRaw[todayKey] : []
+    );
+    
+    // Шукаємо період що щойно закінчився (в межах 5-30 хв після завершення)
+    let justEndedInterval = null;
+    let nextInterval = null;
+    for (let i = 0; i < mergedTodayIntervals.length; i++) {
+      const interval = mergedTodayIntervals[i];
+      const diffFromEnd = nowMinutes - interval.endMinutes;
+      
+      // Період закінчився 5-30 хв тому
+      if (diffFromEnd >= 5 && diffFromEnd <= 30) {
+        justEndedInterval = interval;
+        // Беремо наступний період якщо він є
+        if (i + 1 < mergedTodayIntervals.length) {
+          nextInterval = mergedTodayIntervals[i + 1];
+        }
+        break;
+      }
+    }
+    
+    let nextOutageMessageSent = false;
+    if (justEndedInterval && nextInterval) {
+      const nextKey = `${nextInterval.startMinutes}-${nextInterval.endMinutes}`;
+      if (!todaysNextOutageSet.has(nextKey)) {
+        console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} щойно закінчився, повідомляємо про наступний ${nextInterval.startStr}-${nextInterval.endStr}`);
+        
+        const nextOutageMessage = `<b>💡 Наступне планове відключення</b>\n\n<b>${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}</b>`;
+        
+        nextOutageMessageSent = await sendTelegramMessage(nextOutageMessage, false, false);
+        if (nextOutageMessageSent) {
+          console.log('✅ Повідомлення про наступне відключення надіслано');
+          todaysNextOutageSet.add(nextKey);
+        } else {
+          console.log('⚠️ Повідомлення про наступне відключення не вдалося надіслати');
+        }
+      } else {
+        console.log(`ℹ️  Повідомлення про наступне відключення ${nextInterval.startStr}-${nextInterval.endStr} вже було відправлено`);
+      }
+    }
+    
+    const updatedNextOutageMap = {};
+    if (todaysNextOutageSet.size > 0) {
+      updatedNextOutageMap[todayKey] = Array.from(todaysNextOutageSet);
+    }
+    
     // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
     if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
       let title;
@@ -345,7 +396,9 @@ async function monitor() {
         lastEveningReportDate: sent && shouldSendEveningReport ? todayKey : (lastState?.lastEveningReportDate || null),
         lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
         lastTodayChangeTimestamp: comparison.scheduleChanged ? new Date().toISOString() : (lastState?.lastTodayChangeTimestamp || null),
-        remindersSent: updatedRemindersSentMap
+        remindersSent: updatedRemindersSentMap,
+        // При змінах графіку очищаємо історію повідомлень про наступні відключення (бо періоди могли змінитись)
+        nextOutageNotificationsSent: comparison.scheduleChanged ? {} : updatedNextOutageMap
       };
       
       // Зберігаємо новий стан
@@ -365,7 +418,8 @@ async function monitor() {
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
         lastTodayChangeTimestamp: lastState?.lastTodayChangeTimestamp || null,
-        remindersSent: updatedRemindersSentMap
+        remindersSent: updatedRemindersSentMap,
+        nextOutageNotificationsSent: updatedNextOutageMap
       };
       saveState(currentState);
     }
