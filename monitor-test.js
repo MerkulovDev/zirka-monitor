@@ -242,21 +242,30 @@ async function monitor() {
     
     let nextOutageMessageSent = false;
     if (justEndedInterval && nextInterval) {
-      const nextKey = `${nextInterval.startMinutes}-${nextInterval.endMinutes}`;
-      if (!todaysNextOutageSet.has(nextKey)) {
-        console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} щойно закінчився, повідомляємо про наступний ${nextInterval.startStr}-${nextInterval.endStr}`);
-        
-        const nextOutageMessage = `<b>💡 Наступне планове відключення</b>\n\n<b>${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}</b>`;
-        
-        nextOutageMessageSent = await sendTelegramMessage(nextOutageMessage, false, false);
-        if (nextOutageMessageSent) {
-          console.log('✅ Повідомлення про наступне відключення надіслано');
-          todaysNextOutageSet.add(nextKey);
+      // ВАЖЛИВО: повідомляти тільки якщо наступний період ЩЕ НЕ ПОЧАВСЯ
+      // Вікно: після закінчення попереднього ДО початку наступного
+      if (nowMinutes < nextInterval.startMinutes) {
+        const nextKey = `${nextInterval.startMinutes}-${nextInterval.endMinutes}`;
+        if (!todaysNextOutageSet.has(nextKey)) {
+          const timeUntilNext = nextInterval.startMinutes - nowMinutes;
+          console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} щойно закінчився, наступний ${nextInterval.startStr}-${nextInterval.endStr} через ${timeUntilNext} хв`);
+          
+          const nextOutageMessage = `<b>💡 Наступне планове відключення</b>\n\n<b>${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}</b>`;
+          
+          // Беззвучно вночі (23:00-8:00)
+          const silent = isQuietHours;
+          nextOutageMessageSent = await sendTelegramMessage(nextOutageMessage, silent, false);
+          if (nextOutageMessageSent) {
+            console.log('✅ Повідомлення про наступне відключення надіслано');
+            todaysNextOutageSet.add(nextKey);
+          } else {
+            console.log('⚠️ Повідомлення про наступне відключення не вдалося надіслати');
+          }
         } else {
-          console.log('⚠️ Повідомлення про наступне відключення не вдалося надіслати');
+          console.log(`ℹ️  Повідомлення про наступне відключення ${nextInterval.startStr}-${nextInterval.endStr} вже було відправлено`);
         }
       } else {
-        console.log(`ℹ️  Повідомлення про наступне відключення ${nextInterval.startStr}-${nextInterval.endStr} вже було відправлено`);
+        console.log(`ℹ️  Наступний період ${nextInterval.startStr}-${nextInterval.endStr} вже почався, повідомлення не відправляємо`);
       }
     }
     
