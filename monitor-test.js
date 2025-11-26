@@ -114,8 +114,12 @@ async function monitor() {
     
     if (!comparison.scheduleChanged && hoursSinceLastChange >= 5) {
       const lastReminderDate = lastState?.lastReminderDate || null;
+      const lastMorningDate = lastState?.lastMorningReportDate || null;
+      
       if (lastReminderDate === todayKey) {
         console.log('🔔 Нагадування вже відправлено сьогодні.');
+      } else if (lastMorningDate === todayKey) {
+        console.log('🔔 Ранкове повідомлення вже було сьогодні, нагадування не потрібне.');
       } else {
         shouldSendReminder = true;
         console.log(`🔔 Від останньої зміни пройшло ${hoursSinceLastChange.toFixed(1)} годин (>5), відправляємо нагадування.`);
@@ -123,18 +127,19 @@ async function monitor() {
     }
 
     // Ранковий звіт о 8:00 про графік на сьогодні
+    // ТІЛЬКИ якщо немає змін на сьогодні (інакше відправимо оновлення)
     let shouldSendMorningReport = false;
+    const isMorningWindow = isMorningReport;
     if (isMorningReport) {
       const lastMorningDate = lastState?.lastMorningReportDate || null;
       if (lastMorningDate === todayKey) {
-        console.log('☀️ Ранковий звіт уже відправлено сьогодні.');
+        console.log('☀️ Ранкове повідомлення вже відправлено сьогодні.');
+      } else if (comparison.scheduleChanged) {
+        console.log('☀️ Ранок: графік на сьогодні змінився, відправимо як оновлення (це і є ранкове повідомлення).');
+        // Не встановлюємо shouldSendMorningReport, бо відправимо оновлення
       } else {
         shouldSendMorningReport = true;
-        if (comparison.scheduleChanged) {
-          console.log('☀️ Ранок: графік на сьогодні змінився, відправимо як оновлення.');
-        } else {
-          console.log('☀️ Ранок: графік не змінився, відправимо щоденне нагадування.');
-        }
+        console.log('☀️ Ранок: графік не змінився, відправимо щоденне нагадування.');
       }
     }
 
@@ -353,7 +358,10 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMorningReportDate: sent && shouldSendMorningReport ? todayKey : (lastState?.lastMorningReportDate || null),
+        // Ранкове повідомлення відправлено якщо:
+        // 1. Відправили ранковий звіт (shouldSendMorningReport)
+        // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
+        lastMorningReportDate: sent && (shouldSendMorningReport || (isMorningWindow && comparison.scheduleChanged)) ? todayKey : (lastState?.lastMorningReportDate || null),
         lastEveningReportDate: sent && shouldSendEveningReport ? todayKey : (lastState?.lastEveningReportDate || null),
         lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
         lastReminderDate: sent && shouldSendReminder ? todayKey : (lastState?.lastReminderDate || null),
