@@ -91,12 +91,16 @@
       "interpretation": "⚠️ Відключення з 17:00 до 17:30"
     }
   ],
-  "timestamp": "2025-11-28T10:46:20.322Z",
+  "timestamp": "2025-11-28T11:19:23.365Z",
   "lastMorningReportDate": "2025-11-26",
   "lastEveningReportDate": "2025-11-27",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-11-27T08:57:56.162Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2025-11-28": [
+      "810"
+    ]
+  },
   "nextOutageNotificationsSent": {
     "2025-11-28": [
       "810-1050"
