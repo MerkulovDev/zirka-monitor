@@ -4,6 +4,9 @@ const { processSchedule, formatScheduleMessage, mergeDisconnectionPeriods } = re
 const { getLastKnownState, saveState, compareStates } = require('./src/state');
 const { scrapeSchedule } = require('./src/scraper');
 
+// Налаштування: тимчасово відключити вечірнє нагадування (щоб легко можна було повернути)
+const ENABLE_EVENING_REPORT = false;
+
 function getLocalDateKey(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -243,7 +246,8 @@ async function monitor() {
     }
 
     let shouldSendEveningReport = false;
-    if (isEveningReport) {
+    // Тимчасово відключено (щоб легко можна було повернути, змініть ENABLE_EVENING_REPORT на true)
+    if (ENABLE_EVENING_REPORT && isEveningReport) {
       const lastEveningDate = lastState?.lastEveningReportDate || null;
       if (lastEveningDate === todayKey) {
         console.log('🌆 Вечірнє інформування вже відправлено сьогодні.');
@@ -257,13 +261,13 @@ async function monitor() {
       let title;
       let pendingLog;
       if (shouldSendMorningReport) {
-        title = '🔌 Графік на сьогодні';
+        title = '🔌 Нагадування: Графік на сьогодні';
         pendingLog = '📅 Відправляємо ранкове повідомлення...';
       } else if (shouldSendNightReport) {
         title = '🔌 Нічне оновлення графіку';
         pendingLog = '🌙 Відправляємо нічне повідомлення...';
       } else if (shouldSendEveningReport) {
-        title = '🔌 Графік на завтра';
+        title = '🔌 Нагадування: Графік на завтра';
         pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
       } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
         title = '🔌 Групу оновлено';
