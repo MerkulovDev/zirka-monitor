@@ -79,7 +79,7 @@
       "interpretation": "⚠️ Відключення з 14:00 до 14:30"
     }
   ],
-  "timestamp": "2025-11-29T08:12:28.515Z",
+  "timestamp": "2025-11-29T08:37:21.103Z",
   "lastMessageIn6to8": true,
   "lastMorningReportDate": "2025-11-29",
   "lastEveningReportDate": "2025-11-28",
@@ -100,6 +100,9 @@
     ],
     "2025-11-28": [
       "810"
+    ],
+    "2025-11-29": [
+      "660"
     ]
   }
 }
