@@ -105,16 +105,22 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
 
-    // Перевіряємо скільки часу пройшло від останньої зміни на сьогодні
+    // Перевіряємо скільки часу пройшло від останніх змін на сьогодні та завтра
     const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
-    const hoursSinceLastChange = lastTodayChangeTimestamp 
+    const lastTomorrowChangeTimestamp = lastState?.lastTomorrowChangeTimestamp || null;
+    
+    const hoursSinceLastTodayChange = lastTodayChangeTimestamp 
       ? (now.getTime() - new Date(lastTodayChangeTimestamp).getTime()) / (1000 * 60 * 60)
+      : 999; // Якщо не було змін - вважаємо що давно
+    
+    const hoursSinceLastTomorrowChange = lastTomorrowChangeTimestamp 
+      ? (now.getTime() - new Date(lastTomorrowChangeTimestamp).getTime()) / (1000 * 60 * 60)
       : 999; // Якщо не було змін - вважаємо що давно
 
     // Ранковий звіт о 8:00 про графік на сьогодні
     // Відправляємо ТІЛЬКИ якщо:
     // 1. Немає змін зараз
-    // 2. Останні зміни були більше 5 годин тому (або не було взагалі)
+    // 2. Останні зміни НА СЬОГОДНІ були більше 5 годин тому (або не було взагалі)
     let shouldSendMorningReport = false;
     if (isMorningReport) {
       const lastMorningDate = lastState?.lastMorningReportDate || null;
@@ -123,30 +129,33 @@ async function monitor() {
       } else if (comparison.scheduleChanged) {
         console.log('☀️ Ранок: графік на сьогодні змінився, відправимо як оновлення (це і є ранкове повідомлення).');
         // Не встановлюємо shouldSendMorningReport, бо відправимо оновлення
-      } else if (hoursSinceLastChange < 5) {
-        console.log(`☀️ Ранок: останні зміни були ${hoursSinceLastChange.toFixed(1)} год тому (<5), ранкове нагадування не потрібне.`);
+      } else if (hoursSinceLastTodayChange < 5) {
+        console.log(`☀️ Ранок: останні зміни на сьогодні були ${hoursSinceLastTodayChange.toFixed(1)} год тому (<5), ранкове нагадування не потрібне.`);
       } else {
         shouldSendMorningReport = true;
-        console.log(`☀️ Ранок: останні зміни ${hoursSinceLastChange.toFixed(1)} год тому (>5), відправимо ранкове нагадування.`);
+        console.log(`☀️ Ранок: останні зміни на сьогодні ${hoursSinceLastTodayChange.toFixed(1)} год тому (>5), відправимо ранкове нагадування.`);
       }
     }
 
     // Вечірній звіт о 21:00 про графік на завтра
+    // Відправляємо ТІЛЬКИ якщо:
+    // 1. Немає змін на завтра зараз
+    // 2. Останні зміни НА ЗАВТРА були більше 5 годин тому (або не було взагалі)
     let shouldSendEveningReport = false;
     if (isEveningReport) {
       const lastEveningDate = lastState?.lastEveningReportDate || null;
       if (lastEveningDate === todayKey) {
         console.log('🌆 Вечірній звіт уже відправлено сьогодні.');
+      } else if (comparison.tomorrowChanged) {
+        // Якщо є зміни НА ЗАВТРА зараз - НЕ відправляємо вечірнє нагадування (відправимо оновлення)
+        console.log('🌆 Вечір: є зміни на завтра, відправимо як оновлення (це і є вечірнє повідомлення).');
+        shouldSendEveningReport = false;
+      } else if (hoursSinceLastTomorrowChange < 5) {
+        console.log(`🌆 Вечір: останні зміни на завтра були ${hoursSinceLastTomorrowChange.toFixed(1)} год тому (<5), вечірнє нагадування не потрібне.`);
       } else {
-        // Якщо є зміни НА ЗАВТРА - НЕ відправляємо вечірнє нагадування (відправимо оновлення)
-        if (comparison.tomorrowChanged) {
-          console.log('🌆 Вечір: є зміни на завтра, вечірнє нагадування не потрібне (відправимо оновлення).');
-          shouldSendEveningReport = false;
-        } else {
-          // Тільки якщо змін на завтра немає - відправляємо щоденне нагадування
-          shouldSendEveningReport = true;
-          console.log('🌆 Вечір: змін на завтра немає, відправимо щоденне нагадування.');
-        }
+        // Тільки якщо змін на завтра немає І давно не було - відправляємо щоденне нагадування
+        shouldSendEveningReport = true;
+        console.log(`🌆 Вечір: останні зміни на завтра ${hoursSinceLastTomorrowChange.toFixed(1)} год тому (>5), відправимо вечірнє нагадування.`);
       }
     }
 
@@ -426,9 +435,13 @@ async function monitor() {
         // 1. Відправили ранкове нагадування (shouldSendMorningReport)
         // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
         lastMorningReportDate: sent && (shouldSendMorningReport || (isMorningWindow && comparison.scheduleChanged)) ? todayKey : (lastState?.lastMorningReportDate || null),
-        lastEveningReportDate: sent && shouldSendEveningReport ? todayKey : (lastState?.lastEveningReportDate || null),
+        // Вечірнє повідомлення відправлено якщо:
+        // 1. Відправили вечірнє нагадування (shouldSendEveningReport)
+        // 2. АБО в вечірній час (isEveningReport) відправили оновлення на завтра
+        lastEveningReportDate: sent && (shouldSendEveningReport || (isEveningReport && comparison.tomorrowChanged)) ? todayKey : (lastState?.lastEveningReportDate || null),
         lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
         lastTodayChangeTimestamp: comparison.scheduleChanged ? new Date().toISOString() : (lastState?.lastTodayChangeTimestamp || null),
+        lastTomorrowChangeTimestamp: comparison.tomorrowChanged ? new Date().toISOString() : (lastState?.lastTomorrowChangeTimestamp || null),
         remindersSent: updatedRemindersSentMap,
         // При змінах графіку очищаємо історію повідомлень про наступні відключення (бо періоди могли змінитись)
         nextOutageNotificationsSent: comparison.scheduleChanged ? {} : updatedNextOutageMap
@@ -451,6 +464,7 @@ async function monitor() {
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
         lastTodayChangeTimestamp: lastState?.lastTodayChangeTimestamp || null,
+        lastTomorrowChangeTimestamp: lastState?.lastTomorrowChangeTimestamp || null,
         remindersSent: updatedRemindersSentMap,
         nextOutageNotificationsSent: updatedNextOutageMap
       };
