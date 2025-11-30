@@ -1,9 +1,9 @@
-name: Monitor TEST (Pinned Messages)
+name: Monitor TEST (DISABLED - можна запустити вручну)
 
 on:
-  schedule:
-    # Запускає кожні 15 хвилин
-    - cron: '*/15 * * * *'
+  # schedule:
+  #   # Тимчасово відключено - функціонал перенесено в PROD
+  #   - cron: '*/15 * * * *'
   workflow_dispatch: # Можна запустити вручну
 
 jobs:

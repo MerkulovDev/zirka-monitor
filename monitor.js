@@ -1,11 +1,11 @@
 const { CONFIG, validateConfig } = require('./src/config');
-const { sendTelegramMessage } = require('./src/telegram');
+const { sendTelegramMessage } = require('./src/telegram-pinned'); // Використовуємо версію з закріпленням
 const { processSchedule, formatScheduleMessage, mergeDisconnectionPeriods } = require('./src/schedule');
 const { getLastKnownState, saveState, compareStates } = require('./src/state');
 const { scrapeSchedule } = require('./src/scraper');
 
-// Налаштування: тимчасово відключити вечірнє нагадування (щоб легко можна було повернути)
-const ENABLE_EVENING_REPORT = false;
+// Налаштування: вечірнє нагадування (щоб вимкнути, змініть на false)
+const ENABLE_EVENING_REPORT = true;
 
 function getLocalDateKey(date = new Date()) {
   const year = date.getFullYear();
@@ -50,70 +50,6 @@ function formatDurationForReminder(totalMinutes) {
   return parts.join(' ');
 }
 
-function formatDurationShort(minutes) {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  const parts = [];
-  if (hours > 0) {
-    parts.push(`${hours} год`);
-  }
-  if (mins > 0) {
-    parts.push(`${mins} хв`);
-  }
-  if (parts.length === 0) {
-    return '0 хв';
-  }
-  return parts.join(' ');
-}
-
-const MINUTES_IN_DAY = 24 * 60;
-
-function formatTimeFromMinutes(minutes) {
-  const normalized = ((minutes % MINUTES_IN_DAY) + MINUTES_IN_DAY) % MINUTES_IN_DAY;
-  const hrs = Math.floor(normalized / 60);
-  const mins = normalized % 60;
-  return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-}
-
-function extendIntervalsAcrossMidnight(todayIntervals, tomorrowIntervals) {
-  if (!Array.isArray(todayIntervals) || todayIntervals.length === 0) {
-    return [];
-  }
-  const extended = todayIntervals.map(interval => ({ ...interval }));
-  if (!Array.isArray(tomorrowIntervals) || tomorrowIntervals.length === 0) {
-    return extended;
-  }
-
-  const lastToday = extended[extended.length - 1];
-  if (!lastToday || lastToday.endMinutes < MINUTES_IN_DAY) {
-    return extended;
-  }
-
-  let currentEnd = lastToday.endMinutes;
-  if (currentEnd < MINUTES_IN_DAY) {
-    return extended;
-  }
-
-  for (const interval of tomorrowIntervals) {
-    const startAbs = MINUTES_IN_DAY + interval.startMinutes;
-    if (startAbs > currentEnd + 1) {
-      break;
-    }
-
-    const endAbs = MINUTES_IN_DAY + interval.endMinutes;
-    currentEnd = Math.max(currentEnd, endAbs);
-  }
-
-  if (currentEnd > lastToday.endMinutes) {
-    lastToday.endMinutes = currentEnd;
-    lastToday.endStr = formatTimeFromMinutes(currentEnd);
-    lastToday.durationMinutes = currentEnd - lastToday.startMinutes;
-    lastToday.durationStr = formatDurationShort(lastToday.durationMinutes);
-  }
-
-  return extended;
-}
-
 // Перевіряємо конфігурацію при запуску
 validateConfig();
 
@@ -141,18 +77,15 @@ async function monitor() {
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
-    const mergedTodayIntervalsRaw = mergeDisconnectionPeriods(schedule);
-    const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule) : null;
-    const mergedTomorrowIntervals = processedTomorrowSchedule ? mergeDisconnectionPeriods(processedTomorrowSchedule.schedule) : [];
-    const mergedTodayIntervals = extendIntervalsAcrossMidnight(mergedTodayIntervalsRaw, mergedTomorrowIntervals);
+    const mergedTodayIntervals = mergeDisconnectionPeriods(schedule);
     
-    // Визначаємо чи є ранкове повідомлення (о 8:00)
+    // Визначаємо поточний час
     now = new Date();
     hour = now.getHours();
     minutes = now.getMinutes();
-    const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20
-    const isNightReport = hour === 4 && minutes < 20; // О 4:00-4:20
-    const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20
+    const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20 - щоденне повідомлення про сьогодні
+    const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20 - щоденне повідомлення про завтра
+    const isNightReport = hour >= 2 && hour < 4; // 2:00-4:00 - нічний моніторинг змін
     const isQuietHours = hour >= 23 || hour < 8;
     const nowMinutes = hour * 60 + minutes;
     const todayKey = getLocalDateKey(now);
@@ -172,17 +105,65 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
 
-    let shouldSendNightReport = false;
-    if (isNightReport) {
-      const lastNightDate = lastState?.lastNightReportDate || null;
-      if (lastNightDate === todayKey) {
-        console.log('🌙 Нічний звіт уже відправлено сьогодні.');
-      } else if (comparison.changed) {
-        shouldSendNightReport = true;
-        console.log('🌙 Нічний моніторинг: зафіксовано зміни, готуємо беззвучне повідомлення.');
+    // Перевіряємо скільки часу пройшло від останніх змін на сьогодні та завтра
+    const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
+    const lastTomorrowChangeTimestamp = lastState?.lastTomorrowChangeTimestamp || null;
+    
+    const hoursSinceLastTodayChange = lastTodayChangeTimestamp 
+      ? (now.getTime() - new Date(lastTodayChangeTimestamp).getTime()) / (1000 * 60 * 60)
+      : 999; // Якщо не було змін - вважаємо що давно
+    
+    const hoursSinceLastTomorrowChange = lastTomorrowChangeTimestamp 
+      ? (now.getTime() - new Date(lastTomorrowChangeTimestamp).getTime()) / (1000 * 60 * 60)
+      : 999; // Якщо не було змін - вважаємо що давно
+
+    // Ранковий звіт о 8:00 про графік на сьогодні
+    // Відправляємо ТІЛЬКИ якщо:
+    // 1. Немає змін зараз
+    // 2. Останні зміни НА СЬОГОДНІ були більше 5 годин тому (або не було взагалі)
+    let shouldSendMorningReport = false;
+    if (isMorningReport) {
+      const lastMorningDate = lastState?.lastMorningReportDate || null;
+      if (lastMorningDate === todayKey) {
+        console.log('☀️ Ранкове повідомлення вже відправлено сьогодні.');
+      } else if (comparison.scheduleChanged) {
+        console.log('☀️ Ранок: графік на сьогодні змінився, відправимо як оновлення (це і є ранкове повідомлення).');
+        // Не встановлюємо shouldSendMorningReport, бо відправимо оновлення
+      } else if (hoursSinceLastTodayChange < 5) {
+        console.log(`☀️ Ранок: останні зміни на сьогодні були ${hoursSinceLastTodayChange.toFixed(1)} год тому (<5), ранкове нагадування не потрібне.`);
       } else {
-        console.log('🌙 Нічний моніторинг: змін немає, повідомлення не надсилаємо.');
+        shouldSendMorningReport = true;
+        console.log(`☀️ Ранок: останні зміни на сьогодні ${hoursSinceLastTodayChange.toFixed(1)} год тому (>5), відправимо ранкове нагадування.`);
       }
+    }
+
+    // Вечірній звіт о 21:00 про графік на завтра
+    // Відправляємо ТІЛЬКИ якщо:
+    // 1. Немає змін на завтра зараз
+    // 2. Останні зміни НА ЗАВТРА були більше 5 годин тому (або не було взагалі)
+    let shouldSendEveningReport = false;
+    if (ENABLE_EVENING_REPORT && isEveningReport) {
+      const lastEveningDate = lastState?.lastEveningReportDate || null;
+      if (lastEveningDate === todayKey) {
+        console.log('🌆 Вечірній звіт уже відправлено сьогодні.');
+      } else if (comparison.tomorrowChanged) {
+        // Якщо є зміни НА ЗАВТРА зараз - НЕ відправляємо вечірнє нагадування (відправимо оновлення)
+        console.log('🌆 Вечір: є зміни на завтра, відправимо як оновлення (це і є вечірнє повідомлення).');
+        shouldSendEveningReport = false;
+      } else if (hoursSinceLastTomorrowChange < 5) {
+        console.log(`🌆 Вечір: останні зміни на завтра були ${hoursSinceLastTomorrowChange.toFixed(1)} год тому (<5), вечірнє нагадування не потрібне.`);
+      } else {
+        // Тільки якщо змін на завтра немає І давно не було - відправляємо щоденне нагадування
+        shouldSendEveningReport = true;
+        console.log(`🌆 Вечір: останні зміни на завтра ${hoursSinceLastTomorrowChange.toFixed(1)} год тому (>5), відправимо вечірнє нагадування.`);
+      }
+    }
+
+    // Нічний моніторинг змін (2-4 ночі)
+    let shouldSendNightReport = false;
+    if (isNightReport && comparison.changed) {
+      shouldSendNightReport = true;
+      console.log('🌙 Нічний моніторинг: зафіксовано зміни, готуємо беззвучне повідомлення.');
     }
     
     // Логіка нагадувань за 30 хвилин до відключення
@@ -205,14 +186,24 @@ async function monitor() {
     
     let reminderMessageSent = false;
     if (dueReminders.length > 0) {
-      console.log(`⏰ Найближчі відключення стартують менш ніж за 30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
+      console.log(`⏰ Наближаються відключення через ≤30 хв: ${dueReminders.map(r => r.interval.startStr).join(', ')}`);
+      
       let reminderMessage = `<b>🔔 Нагадування: Найближчі 30 хв очікуйте відключення за графіком</b>\n\n`;
-      const { interval } = dueReminders[0];
-      const durationText = formatDurationForReminder(interval.durationMinutes);
-      reminderMessage += `Планове відключення: ${interval.startStr} - ${interval.endStr} · ${interval.durationStr}\n`;
+      
+      // Перше відключення - жирним
+      const firstInterval = dueReminders[0].interval;
+      reminderMessage += `<b>Планове відключення: ${firstInterval.startStr} - ${firstInterval.endStr} · ${firstInterval.durationStr}</b>\n`;
+      
+      // Якщо є наступні відключення
       if (dueReminders.length > 1) {
-        const nextInterval = dueReminders[1].interval;
-        reminderMessage += `Наступне відключення: ${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}\n`;
+        reminderMessage += `\n<b>🔜 Наступні відключення:</b>\n`;
+        for (let i = 1; i < dueReminders.length; i++) {
+          const interval = dueReminders[i].interval;
+          reminderMessage += `${interval.startStr} - ${interval.endStr} · ${interval.durationStr}`;
+          if (i !== dueReminders.length - 1) {
+            reminderMessage += `\n`;
+          }
+        }
       }
       
       reminderMessageSent = await sendTelegramMessage(reminderMessage, true);
@@ -226,69 +217,147 @@ async function monitor() {
       }
     }
     
-    const updatedRemindersSentMap = { ...remindersRaw };
+    const updatedRemindersSentMap = {};
     if (todaysReminderSet.size > 0) {
       updatedRemindersSentMap[todayKey] = Array.from(todaysReminderSet);
-    } else {
-      delete updatedRemindersSentMap[todayKey];
     }
     
-    // Планові повідомлення
-    let shouldSendMorningReport = false;
-    if (isMorningReport) {
-      const lastMorningDate = lastState?.lastMorningReportDate || null;
-      if (lastMorningDate === todayKey) {
-        console.log('☀️ Ранковий звіт уже відправлено сьогодні.');
-      } else {
-        shouldSendMorningReport = true;
-        console.log('☀️ Плановий ранковий звіт о 08:00.');
-      }
-    }
-
-    let shouldSendEveningReport = false;
-    // Тимчасово відключено (щоб легко можна було повернути, змініть ENABLE_EVENING_REPORT на true)
-    if (ENABLE_EVENING_REPORT && isEveningReport) {
-      const lastEveningDate = lastState?.lastEveningReportDate || null;
-      if (lastEveningDate === todayKey) {
-        console.log('🌆 Вечірнє інформування вже відправлено сьогодні.');
-      } else {
-        shouldSendEveningReport = true;
-        console.log('🌆 Планове інформування о 21:00.');
+    // Логіка "Наступне планове відключення" після закінчення поточного
+    const nextOutageNotificationsRaw = lastState && typeof lastState.nextOutageNotificationsSent === 'object' && !Array.isArray(lastState.nextOutageNotificationsSent)
+      ? { ...lastState.nextOutageNotificationsSent }
+      : {};
+    const todaysNextOutageSet = new Set(
+      Array.isArray(nextOutageNotificationsRaw[todayKey]) ? nextOutageNotificationsRaw[todayKey] : []
+    );
+    
+    // Шукаємо період що вже закінчився і є наступний період
+    // Логіка: якщо зараз між двома відключеннями - повідомляємо про наступне (якщо ще не повідомляли)
+    let justEndedInterval = null;
+    let nextInterval = null;
+    for (let i = 0; i < mergedTodayIntervals.length; i++) {
+      const interval = mergedTodayIntervals[i];
+      const diffFromEnd = nowMinutes - interval.endMinutes;
+      
+      // Період вже закінчився (мінімум 5 хв тому)
+      if (diffFromEnd >= 5) {
+        // Перевіряємо чи є наступний період
+        if (i + 1 < mergedTodayIntervals.length) {
+          const next = mergedTodayIntervals[i + 1];
+          // Якщо наступний період ще не почався - це наш кандидат
+          if (nowMinutes < next.startMinutes) {
+            justEndedInterval = interval;
+            nextInterval = next;
+            break; // Знайшли, виходимо
+          }
+        }
       }
     }
     
+    let nextOutageMessageSent = false;
+    if (justEndedInterval && nextInterval) {
+      // ВАЖЛИВО: повідомляти тільки якщо наступний період ЩЕ НЕ ПОЧАВСЯ
+      // Вікно: після закінчення попереднього ДО початку наступного
+      if (nowMinutes < nextInterval.startMinutes) {
+        const nextKey = `${nextInterval.startMinutes}-${nextInterval.endMinutes}`;
+        if (!todaysNextOutageSet.has(nextKey)) {
+          const timeUntilNext = nextInterval.startMinutes - nowMinutes;
+          console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} щойно закінчився, наступний ${nextInterval.startStr}-${nextInterval.endStr} через ${timeUntilNext} хв`);
+          
+          const nextOutageMessage = `<b>💡 Наступне планове відключення</b>\n\n<b>${nextInterval.startStr} - ${nextInterval.endStr} · ${nextInterval.durationStr}</b>`;
+          
+          // Беззвучно вночі (23:00-8:00)
+          const silent = isQuietHours;
+          nextOutageMessageSent = await sendTelegramMessage(nextOutageMessage, silent, false);
+          if (nextOutageMessageSent) {
+            console.log('✅ Повідомлення про наступне відключення надіслано');
+            todaysNextOutageSet.add(nextKey);
+          } else {
+            console.log('⚠️ Повідомлення про наступне відключення не вдалося надіслати');
+          }
+        } else {
+          console.log(`ℹ️  Повідомлення про наступне відключення ${nextInterval.startStr}-${nextInterval.endStr} вже було відправлено`);
+        }
+      } else {
+        console.log(`ℹ️  Наступний період ${nextInterval.startStr}-${nextInterval.endStr} вже почався, повідомлення не відправляємо`);
+      }
+    } else if (justEndedInterval && !nextInterval) {
+      // Період закінчився, але наступного немає
+      const noMoreKey = 'no-more-today';
+      if (!todaysNextOutageSet.has(noMoreKey)) {
+        console.log(`💡 Період ${justEndedInterval.startStr}-${justEndedInterval.endStr} закінчився, більше відключень на сьогодні не заплановано`);
+        
+        const noMoreMessage = `<b>🔋 Наразі відключень на сьогодні більше не заплановано 😌✨</b>\n\nЯкщо щось зміниться — одразу повідомимо!`;
+        
+        // Беззвучно вночі (23:00-8:00)
+        const silent = isQuietHours;
+        nextOutageMessageSent = await sendTelegramMessage(noMoreMessage, silent, false);
+        if (nextOutageMessageSent) {
+          console.log('✅ Повідомлення про відсутність подальших відключень надіслано');
+          todaysNextOutageSet.add(noMoreKey);
+        } else {
+          console.log('⚠️ Повідомлення не вдалося надіслати');
+        }
+      } else {
+        console.log('ℹ️  Повідомлення про відсутність подальших відключень вже було відправлено');
+      }
+    }
+    
+    const updatedNextOutageMap = {};
+    if (todaysNextOutageSet.size > 0) {
+      updatedNextOutageMap[todayKey] = Array.from(todaysNextOutageSet);
+    }
+    
+    // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
     if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
       let title;
-      let pendingLog;
+      
+      // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
       if (shouldSendMorningReport) {
-        title = '🔌 Нагадування: Графік на сьогодні';
-        pendingLog = '📅 Відправляємо ранкове повідомлення...';
-      } else if (shouldSendNightReport) {
+        title = '🔌 Нагадування графіку на сьогодні';
+      }
+      // Вечірній звіт о 21:00 - завжди просто "Графік на завтра"
+      // (не "оновлено", бо це плановий звіт, а не реакція на зміни)
+      else if (shouldSendEveningReport) {
+        title = '🔌 Графік на завтра';
+      }
+      // Нічне оновлення
+      else if (shouldSendNightReport) {
         title = '🔌 Нічне оновлення графіку';
-        pendingLog = '🌙 Відправляємо нічне повідомлення...';
-      } else if (shouldSendEveningReport) {
-        title = '🔌 Нагадування: Графік на завтра';
-        pendingLog = '🌆 Відправляємо вечірнє повідомлення...';
-      } else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
+      }
+      // Зміни поза плановими звітами
+      else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
         title = '🔌 Групу оновлено';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.scheduleChanged && comparison.tomorrowChanged) {
         title = '🔌 Графік оновлено на сьогодні і завтра';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.scheduleChanged) {
         title = '🔌 Графік оновлено на сьогодні';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else if (comparison.tomorrowChanged) {
         title = '🔌 Графік оновлено на завтра';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
       } else {
         title = '🔌 Оновлення графіку відключень';
-        pendingLog = '📢 Виявлено зміни! Відправляємо повідомлення...';
+      }
+      
+      // Визначаємо чи закріплювати повідомлення
+      // Закріплюємо ВСІ оновлення графіку "на сьогодні":
+      // 1. Ранковий звіт о 8:00 (ранкове нагадування, беззвучно закріплюємо)
+      // 2. Зміни графіку на сьогодні (в будь-який час, включно з нічними оновленнями)
+      // НЕ закріплюємо: зміни графіку на "завтра", вечірній звіт, зміни групи
+      const shouldPin = shouldSendMorningReport || comparison.scheduleChanged;
+      
+      if (shouldPin) {
+        if (shouldSendNightReport || isQuietHours) {
+          console.log('📢 Відправляємо повідомлення та закріплюємо його беззвучно...');
+        } else {
+          console.log('📢 Відправляємо повідомлення та закріплюємо його...');
+        }
+      } else {
+        console.log('📢 Відправляємо повідомлення (без закріплення)...');
       }
 
       const scheduleSections = [];
       let addedToday = false;
       let addedTomorrow = false;
+      const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule).schedule : null;
 
       const pushTodaySection = () => {
         if (!addedToday) {
@@ -299,8 +368,8 @@ async function monitor() {
 
       const pushTomorrowSection = () => {
         if (!addedTomorrow) {
-          if (processedTomorrowSchedule) {
-            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule.schedule || [] });
+          if (tomorrowSchedule) {
+            scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule || [] });
           } else {
             scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
           }
@@ -310,73 +379,49 @@ async function monitor() {
 
       // Логіка показу секцій
       if (shouldSendMorningReport) {
-        // Ранковий звіт - завжди показуємо ТІЛЬКИ сьогодні
+        // Ранковий звіт - завжди показуємо тільки сьогодні БЕЗ пройдених періодів
         pushTodaySection();
       } else if (shouldSendEveningReport) {
-        // Вечірній звіт - завжди показуємо ТІЛЬКИ завтра
+        // Вечірній звіт - завжди показуємо тільки завтра
         pushTomorrowSection();
       } else {
-        // Звичайні оновлення та нічні звіти - показуємо що змінилось
-        if (shouldSendNightReport && comparison.tomorrowChanged) {
-          pushTomorrowSection();
-        }
-
-        if (!addedToday && comparison.scheduleChanged) {
+        // Звичайні оновлення - показуємо що змінилось
+        if (comparison.scheduleChanged) {
           pushTodaySection();
         }
-
-        if (!addedTomorrow && comparison.tomorrowChanged) {
+        if (comparison.tomorrowChanged) {
           pushTomorrowSection();
         }
-
+        // Якщо нічого не змінилось, але є зміни (наприклад, група), показуємо сьогодні
         if (scheduleSections.length === 0) {
           pushTodaySection();
         }
       }
 
-      const lastEveningTomorrow = lastState?.tomorrowSchedule || null;
-      const todaysFullScheduleJson = JSON.stringify(fullSchedule || {});
-      const lastEveningTomorrowJson = JSON.stringify(lastEveningTomorrow || {});
-      const isMorningSameAsLastEvening = shouldSendMorningReport && lastEveningTomorrow && todaysFullScheduleJson === lastEveningTomorrowJson;
-
-      if (shouldSendNightReport) {
-        console.log('🔇 Нічне повідомлення буде відправлено беззвучно.');
-      } else if (isMorningSameAsLastEvening) {
-        console.log('🔇 Ранковий графік не змінився відносно вчорашнього вечірнього. Відправляємо беззвучно.');
-      }
-
-      const forceSilent = isMorningSameAsLastEvening || shouldSendNightReport;
-
-      let sent = false;
-      if (isQuietHours && !shouldSendMorningReport && !shouldSendEveningReport && !shouldSendNightReport) {
-        console.log('🌙 Після 23:00 повідомлення не надсилаємо. Очікуємо ранок.');
-      } else {
-        console.log(pendingLog);
-        const message = formatScheduleMessage(
-          title, 
-          group, 
-          scheduleSections, 
-          factData.update,
-          {
-            filterPastToday: true,
-            hideEmptyTomorrowUntilAfternoon: true,
-          }
-        );
-        sent = await sendTelegramMessage(message, forceSilent);
+      // Формуємо і відправляємо повідомлення
+      // Виділяємо жирним ТІЛЬКИ ті періоди що містять зміни (не плановий звіт)
+      const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport;
+      const message = formatScheduleMessage(
+        title, 
+        group, 
+        scheduleSections, 
+        factData.update,
+        { 
+          highlightChanges: isUpdate,
+          changedHours: comparison.changedHours || [],
+          changedTomorrowHours: comparison.changedTomorrowHours || [],
+          filterPastToday: shouldSendMorningReport // Фільтруємо пройдені періоди для ранкового нагадування
+        }
+      );
+      
+      // Беззвучно: ранкове нагадування, вночі (2-4) або в тихі години (23:00-8:00)
+      const forceSilent = shouldSendMorningReport || shouldSendNightReport || isQuietHours;
+      if (forceSilent) {
+        console.log('🔇 Повідомлення буде відправлено беззвучно.');
       }
       
-      const updatedLastMorningReportDate = sent && shouldSendMorningReport
-        ? todayKey
-        : lastState?.lastMorningReportDate || null;
-      const updatedLastEveningReportDate = sent && shouldSendEveningReport
-        ? todayKey
-        : lastState?.lastEveningReportDate || null;
-      const updatedLastNightReportDate = sent && shouldSendNightReport
-        ? todayKey
-        : lastState?.lastNightReportDate || null;
-      const updatedLastMessageIn6to8 = shouldSendMorningReport
-        ? sent
-        : lastState?.lastMessageIn6to8 || false;
+      // Відправляємо повідомлення і закріплюємо якщо потрібно
+      const sent = await sendTelegramMessage(message, forceSilent, shouldPin);
 
       // Формуємо поточний стан з повним графіком
       const currentState = {
@@ -386,11 +431,20 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: updatedLastMessageIn6to8,
-        lastMorningReportDate: updatedLastMorningReportDate,
-        lastEveningReportDate: updatedLastEveningReportDate,
-        lastNightReportDate: updatedLastNightReportDate,
-        remindersSent: updatedRemindersSentMap
+        // Ранкове повідомлення відправлено якщо:
+        // 1. Відправили ранкове нагадування (shouldSendMorningReport)
+        // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
+        lastMorningReportDate: sent && (shouldSendMorningReport || (isMorningWindow && comparison.scheduleChanged)) ? todayKey : (lastState?.lastMorningReportDate || null),
+        // Вечірнє повідомлення відправлено якщо:
+        // 1. Відправили вечірнє нагадування (shouldSendEveningReport)
+        // 2. АБО в вечірній час (isEveningReport) відправили оновлення на завтра
+        lastEveningReportDate: sent && (shouldSendEveningReport || (isEveningReport && comparison.tomorrowChanged)) ? todayKey : (lastState?.lastEveningReportDate || null),
+        lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
+        lastTodayChangeTimestamp: comparison.scheduleChanged ? new Date().toISOString() : (lastState?.lastTodayChangeTimestamp || null),
+        lastTomorrowChangeTimestamp: comparison.tomorrowChanged ? new Date().toISOString() : (lastState?.lastTomorrowChangeTimestamp || null),
+        remindersSent: updatedRemindersSentMap,
+        // При змінах графіку очищаємо історію повідомлень про наступні відключення (бо періоди могли змінитись)
+        nextOutageNotificationsSent: comparison.scheduleChanged ? {} : updatedNextOutageMap
       };
       
       // Зберігаємо новий стан
@@ -406,11 +460,13 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        lastMessageIn6to8: lastState?.lastMessageIn6to8 || false,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
-        lastNightReportDate: lastState?.lastNightReportDate || null,
-        remindersSent: updatedRemindersSentMap
+        lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
+        lastTodayChangeTimestamp: lastState?.lastTodayChangeTimestamp || null,
+        lastTomorrowChangeTimestamp: lastState?.lastTomorrowChangeTimestamp || null,
+        remindersSent: updatedRemindersSentMap,
+        nextOutageNotificationsSent: updatedNextOutageMap
       };
       saveState(currentState);
     }

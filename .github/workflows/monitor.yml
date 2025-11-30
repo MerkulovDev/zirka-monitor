@@ -1,17 +1,13 @@
-name: Power Outage Monitor
+name: Monitor PROD (Pinned Messages & All Features)
 
 on:
   schedule:
     # Запускає кожні 15 хвилин
     - cron: '*/15 * * * *'
-    # Альтернативи:
-    # - cron: '0 */2 * * *'  # Кожні 2 години
-    # - cron: '0 */4 * * *'  # Кожні 4 години
-    # - cron: '0 8,12,18 * * *'  # О 8:00, 12:00, 18:00
   workflow_dispatch: # Можна запустити вручну
 
 jobs:
-  monitor:
+  monitor-prod:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,7 +33,7 @@ jobs:
       - name: Create data directory
         run: mkdir -p data
       
-      - name: Run monitor script
+      - name: Run monitor PROD script
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -57,7 +53,7 @@ jobs:
           if [ -f data/last_known_schedule.json ]; then
             git add data/last_known_schedule.json
             if [ -n "$(git status --porcelain data/)" ]; then
-              git commit -m "Update: Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+              git commit -m "📊 Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
               git push || echo "Nothing to push"
             else
               echo "State file unchanged"
