@@ -1,5 +1,5 @@
 {
-  "update": "30.11.2025 12:18",
+  "update": "30.11.2025 17:30",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -23,7 +23,7 @@
     "19": "no",
     "20": "no",
     "21": "no",
-    "22": "first",
+    "22": "no",
     "23": "yes",
     "24": "yes"
   },
@@ -81,24 +81,20 @@
     {
       "hour": 22,
       "range": "21:00-22:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 21:00 до 21:30"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-11-30T15:37:48.420Z",
+  "timestamp": "2025-11-30T15:46:46.858Z",
   "lastMorningReportDate": "2025-11-26",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2025-11-30T07:21:17.883Z",
+  "lastTodayChangeTimestamp": "2025-11-30T15:46:46.858Z",
   "lastTomorrowChangeTimestamp": "2025-11-29T18:50:48.287Z",
   "remindersSent": {
     "2025-11-30": [
       "1080"
     ]
   },
-  "nextOutageNotificationsSent": {
-    "2025-11-30": [
-      "1080-1290"
-    ]
-  }
+  "nextOutageNotificationsSent": {}
 }
