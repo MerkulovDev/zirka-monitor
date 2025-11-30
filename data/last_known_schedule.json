@@ -1,5 +1,5 @@
 {
-  "update": "30.11.2025 18:30",
+  "update": "30.11.2025 19:21",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -21,9 +21,9 @@
     "17": "yes",
     "18": "yes",
     "19": "no",
-    "20": "no",
-    "21": "no",
-    "22": "no",
+    "20": "first",
+    "21": "yes",
+    "22": "yes",
     "23": "yes",
     "24": "yes"
   },
@@ -69,27 +69,15 @@
     {
       "hour": 20,
       "range": "19:00-20:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 21,
-      "range": "20:00-21:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 22,
-      "range": "21:00-22:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 19:00 до 19:30"
     }
   ],
-  "timestamp": "2025-11-30T17:08:19.783Z",
+  "timestamp": "2025-11-30T17:28:36.597Z",
   "lastMorningReportDate": "2025-11-26",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2025-11-30T15:46:46.858Z",
+  "lastTodayChangeTimestamp": "2025-11-30T17:28:36.598Z",
   "lastTomorrowChangeTimestamp": "2025-11-29T18:50:48.287Z",
   "remindersSent": {
     "2025-11-30": [
