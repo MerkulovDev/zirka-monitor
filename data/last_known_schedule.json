@@ -1,5 +1,5 @@
 {
-  "update": "02.12.2025 09:03",
+  "update": "02.12.2025 16:02",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -91,7 +91,7 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-02T13:47:57.545Z",
+  "timestamp": "2025-12-02T14:11:54.039Z",
   "lastMorningReportDate": "2025-12-02",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
@@ -102,5 +102,9 @@
       "720"
     ]
   },
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2025-12-02": [
+      "1350-1440"
+    ]
+  }
 }
