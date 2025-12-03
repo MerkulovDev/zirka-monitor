@@ -1,5 +1,5 @@
 {
-  "update": "03.12.2025 17:21",
+  "update": "03.12.2025 18:27",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -35,20 +35,20 @@
     "5": "yes",
     "6": "yes",
     "7": "yes",
-    "8": "yes",
-    "9": "yes",
-    "10": "yes",
-    "11": "yes",
+    "8": "no",
+    "9": "no",
+    "10": "no",
+    "11": "first",
     "12": "yes",
     "13": "yes",
     "14": "yes",
     "15": "yes",
     "16": "yes",
     "17": "yes",
-    "18": "yes",
-    "19": "yes",
-    "20": "yes",
-    "21": "yes",
+    "18": "second",
+    "19": "no",
+    "20": "no",
+    "21": "no",
     "22": "yes",
     "23": "yes",
     "24": "yes"
@@ -79,12 +79,12 @@
       "interpretation": "⚠️ Відключення з 13:00 до 13:30"
     }
   ],
-  "timestamp": "2025-12-03T16:14:33.820Z",
+  "timestamp": "2025-12-03T16:46:43.490Z",
   "lastMorningReportDate": "2025-12-03",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-12-03T15:36:56.337Z",
-  "lastTomorrowChangeTimestamp": "2025-12-03T06:16:00.428Z",
+  "lastTomorrowChangeTimestamp": "2025-12-03T16:46:43.490Z",
   "remindersSent": {
     "2025-12-03": [
       "600"
