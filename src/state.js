@@ -37,7 +37,15 @@ function saveState(state) {
   }
 }
 
+// Допоміжна функція для отримання дати з timestamp
+function getDateFromTimestamp(timestamp) {
+  if (!timestamp) return null;
+  const date = new Date(timestamp);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 // Функція для порівняння станів з РОЗУМНОЮ ПЕРЕВІРКОЮ ДАТИ ОНОВЛЕННЯ
+// Враховує ротацію дня: коли "завтра" стає "сьогодні"
 function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowSchedule = null) {
   if (!oldState) {
     console.log('🔍 Порівняння: Немає попереднього стану (перший запуск)');
@@ -57,6 +65,16 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   console.log('  Нова дата оновлення:', newState.update);
   console.log('  Стара група:', oldState.group);
   console.log('  Нова група:', newState.group);
+  
+  // ===== КРОК 0: ПЕРЕВІРЯЄМО ЧИ ЗМІНИВСЯ ДЕНЬ (РОТАЦІЯ) =====
+  const oldDate = getDateFromTimestamp(oldState.timestamp);
+  const newDate = getDateFromTimestamp(new Date().toISOString());
+  const isDayRotation = oldDate && newDate && oldDate !== newDate;
+  
+  if (isDayRotation) {
+    console.log(`📅 Виявлено ротацію дня: ${oldDate} → ${newDate}`);
+    console.log('  Вчорашній "завтра" стає сьогоднішнім "сьогодні"');
+  }
   
   // ===== КРОК 1: ПЕРЕВІРЯЄМО ДАТУ ОНОВЛЕННЯ =====
   // Якщо дата не змінилась - графік точно не оновлювався на сайті
@@ -95,21 +113,45 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   console.log('⚠️  Дата оновлення змінилась! Перевіряємо що саме змінилось...');
   
   // ===== КРОК 2: ЯКЩО ДАТА ЗМІНИЛАСЬ - ПЕРЕВІРЯЄМО ЩО САМЕ =====
+  // ВАЖЛИВО: При ротації дня порівнюємо новий "сьогодні" зі старим "завтра"!
   
-  // Порівнюємо повний графік (всі 24 години) через JSON для глибокого порівняння
-  const oldScheduleJson = JSON.stringify(oldState.fullSchedule || {});
+  let scheduleChanged = false;
+  const changedHours = [];
+  
+  // Визначаємо базу для порівняння "сьогодні"
+  // Якщо це ротація дня І є старий tomorrowSchedule - порівнюємо з ним
+  const baseScheduleForToday = (isDayRotation && oldState.tomorrowSchedule) 
+    ? oldState.tomorrowSchedule 
+    : oldState.fullSchedule;
+  
+  const baseScheduleJson = JSON.stringify(baseScheduleForToday || {});
   const newScheduleJson = JSON.stringify(newState.fullSchedule || {});
-  const scheduleChanged = oldScheduleJson !== newScheduleJson;
+  scheduleChanged = baseScheduleJson !== newScheduleJson;
+  
+  if (isDayRotation && oldState.tomorrowSchedule) {
+    console.log('  📊 Порівнюю новий "сьогодні" зі старим "завтра" (ротація дня)');
+  }
   
   // Порівнюємо графік на завтра
+  // При ротації: новий tomorrowSchedule - це зовсім новий день, тому порівнюємо тільки якщо він є
   let tomorrowChanged = false;
-  if (tomorrowSchedule !== null && oldTomorrowSchedule !== null) {
-    const oldTomorrowJson = JSON.stringify(oldTomorrowSchedule || {});
-    const newTomorrowJson = JSON.stringify(tomorrowSchedule || {});
-    tomorrowChanged = oldTomorrowJson !== newTomorrowJson;
-    if (tomorrowChanged) {
-      console.log('  ⚠️  Графік на завтра змінився!');
+  if (tomorrowSchedule !== null) {
+    // Якщо це ротація дня - порівнювати немає з чим (старий tomorrow став today)
+    // Тому перевіряємо чи є новий tomorrow і чи він "новий" для нас
+    if (isDayRotation) {
+      // При ротації - tomorrowSchedule це новий день, не вважаємо це "зміною"
+      // Але якщо оновлення прийшло протягом дня (не ротація) - це справжня зміна
+      console.log('  📊 Графік на завтра - це новий день після ротації (не вважаємо зміною)');
+      tomorrowChanged = false;
+    } else if (oldTomorrowSchedule !== null) {
+      const oldTomorrowJson = JSON.stringify(oldTomorrowSchedule || {});
+      const newTomorrowJson = JSON.stringify(tomorrowSchedule || {});
+      tomorrowChanged = oldTomorrowJson !== newTomorrowJson;
     }
+  }
+  
+  if (tomorrowChanged) {
+    console.log('  ⚠️  Графік на завтра змінився!');
   }
   
   if (groupChanged) {
@@ -117,10 +159,9 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   }
   
   // Знаходимо які години змінились (для виділення тільки змінених періодів)
-  const changedHours = [];
   if (scheduleChanged) {
     console.log('  ⚠️  Графік на сьогодні змінився!');
-    const oldSchedule = oldState.fullSchedule || {};
+    const oldSchedule = baseScheduleForToday || {};
     const newSchedule = newState.fullSchedule || {};
     const differences = [];
     for (let hour = 1; hour <= 24; hour++) {
@@ -152,7 +193,7 @@ function compareStates(oldState, newState, tomorrowSchedule = null, oldTomorrowS
   }
 
   if (!groupChanged && !scheduleChanged && !tomorrowChanged) {
-    console.log('✅ Дата оновилась, але графіки не змінились (можливо технічне оновлення)');
+    console.log('✅ Дата оновилась, але графіки не змінились (можливо технічне оновлення або ротація дня)');
     return { 
       changed: false, 
       groupChanged: false, 
