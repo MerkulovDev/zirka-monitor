@@ -1,5 +1,5 @@
 {
-  "update": "06.12.2025 03:45",
+  "update": "06.12.2025 08:48",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -24,7 +24,7 @@
     "20": "yes",
     "21": "yes",
     "22": "yes",
-    "23": "no",
+    "23": "yes",
     "24": "yes"
   },
   "tomorrowSchedule": {
@@ -77,19 +77,13 @@
       "range": "14:00-15:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 23,
-      "range": "22:00-23:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-06T06:43:42.035Z",
+  "timestamp": "2025-12-06T06:54:19.291Z",
   "lastMorningReportDate": "2025-12-06",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2025-12-04T06:51:25.910Z",
+  "lastTodayChangeTimestamp": "2025-12-06T06:54:19.291Z",
   "lastTomorrowChangeTimestamp": "2025-12-05T16:40:54.526Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
