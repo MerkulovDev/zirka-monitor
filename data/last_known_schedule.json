@@ -145,7 +145,7 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-07T13:23:33.147Z",
+  "timestamp": "2025-12-07T13:39:31.032Z",
   "lastMorningReportDate": "2025-12-07",
   "lastEveningReportDate": "2025-11-28",
   "lastNightUpdateDate": null,
@@ -158,7 +158,8 @@
   },
   "nextOutageNotificationsSent": {
     "2025-12-07": [
-      "510-930"
+      "510-930",
+      "1140-1440"
     ]
   }
 }
