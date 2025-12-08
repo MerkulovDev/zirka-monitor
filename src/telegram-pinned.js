@@ -143,9 +143,45 @@ async function pinTelegramMessage(messageId, silent = true) {
   }
 }
 
+// Функція для відправки повідомлення тільки адміну (якщо налаштовано TELEGRAM_ADMIN_CHAT_ID)
+async function sendTelegramMessageToAdmin(message) {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.log('⚠️  Telegram не налаштовано (відсутній TELEGRAM_BOT_TOKEN)');
+    return false;
+  }
+
+  const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  if (!adminChatId) {
+    console.log('⚠️  TELEGRAM_ADMIN_CHAT_ID не налаштовано, помилка не відправлена');
+    return false;
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const response = await axios.post(url, {
+      chat_id: adminChatId,
+      text: message,
+      parse_mode: 'HTML',
+      disable_notification: false, // Помилки адміну завжди з повідомленням
+    });
+
+    if (response.data.ok) {
+      console.log(`✅ Повідомлення адміну відправлено`);
+      return true;
+    } else {
+      console.error('❌ Помилка відправки адміну:', response.data);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Помилка при відправці адміну:', error.message);
+    return false;
+  }
+}
+
 module.exports = {
   canSendMessage,
   sendTelegramMessage,
+  sendTelegramMessageToAdmin,
   pinTelegramMessage,
   unpinAllChatMessages,
 };

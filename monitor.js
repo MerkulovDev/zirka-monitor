@@ -1,5 +1,5 @@
 const { CONFIG, validateConfig } = require('./src/config');
-const { sendTelegramMessage } = require('./src/telegram-pinned'); // Використовуємо версію з закріпленням
+const { sendTelegramMessage, sendTelegramMessageToAdmin } = require('./src/telegram-pinned'); // Використовуємо версію з закріпленням
 const { processSchedule, formatScheduleMessage, mergeDisconnectionPeriods } = require('./src/schedule');
 const { getLastKnownState, saveState, compareStates } = require('./src/state');
 const { scrapeSchedule } = require('./src/scraper');
@@ -474,9 +474,9 @@ async function monitor() {
   } catch (error) {
     console.error('❌ Помилка моніторингу:', error.message);
     
-    // Відправляємо помилку в Telegram
-    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      await sendTelegramMessage(`❌ <b>Помилка моніторингу</b>\n\n${error.message}`);
+    // Відправляємо помилку тільки адміну
+    if (process.env.TELEGRAM_BOT_TOKEN) {
+      await sendTelegramMessageToAdmin(`❌ <b>Помилка моніторингу</b>\n\n${error.message}`);
     }
     
     process.exit(1);
