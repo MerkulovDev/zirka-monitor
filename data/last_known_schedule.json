@@ -1,5 +1,5 @@
 {
-  "update": "09.12.2025 05:48",
+  "update": "09.12.2025 12:15",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -133,13 +133,17 @@
       "interpretation": "⚠️ Відключення з 23:30 до 24:00"
     }
   ],
-  "timestamp": "2025-12-09T10:12:17.728Z",
+  "timestamp": "2025-12-09T10:40:21.931Z",
   "lastMorningReportDate": "2025-12-09",
   "lastEveningReportDate": "2025-12-08",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-12-08T06:17:46.190Z",
   "lastTomorrowChangeTimestamp": "2025-12-08T20:35:32.875Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2025-12-09": [
+      "780"
+    ]
+  },
   "nextOutageNotificationsSent": {
     "2025-12-09": [
       "780-1020"
