@@ -115,12 +115,16 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-15T06:54:48.708Z",
+  "timestamp": "2025-12-15T07:15:50.317Z",
   "lastMorningReportDate": "2025-12-15",
   "lastEveningReportDate": "2025-12-13",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-12-13T13:01:28.345Z",
   "lastTomorrowChangeTimestamp": "2025-12-14T19:25:00.494Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2025-12-15": [
+      "960-1320"
+    ]
+  }
 }
