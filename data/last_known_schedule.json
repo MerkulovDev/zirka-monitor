@@ -1,5 +1,5 @@
 {
-  "update": "20.12.2025 18:12",
+  "update": "20.12.2025 19:30",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -91,7 +91,7 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-20T17:28:33.740Z",
+  "timestamp": "2025-12-20T17:37:57.835Z",
   "lastMorningReportDate": "2025-12-20",
   "lastEveningReportDate": "2025-12-13",
   "lastNightUpdateDate": null,
