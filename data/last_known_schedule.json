@@ -1,5 +1,5 @@
 {
-  "update": "23.12.2025 18:39",
+  "update": "23.12.2025 20:03",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -28,9 +28,9 @@
     "24": "second"
   },
   "tomorrowSchedule": {
-    "1": "yes",
-    "2": "yes",
-    "3": "yes",
+    "1": "no",
+    "2": "no",
+    "3": "no",
     "4": "yes",
     "5": "yes",
     "6": "yes",
@@ -38,20 +38,20 @@
     "8": "yes",
     "9": "yes",
     "10": "yes",
-    "11": "yes",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
-    "15": "yes",
-    "16": "yes",
-    "17": "yes",
+    "11": "no",
+    "12": "no",
+    "13": "no",
+    "14": "no",
+    "15": "no",
+    "16": "no",
+    "17": "no",
     "18": "yes",
     "19": "yes",
     "20": "yes",
-    "21": "yes",
-    "22": "yes",
-    "23": "yes",
-    "24": "yes"
+    "21": "second",
+    "22": "no",
+    "23": "no",
+    "24": "no"
   },
   "schedule": [
     {
@@ -145,12 +145,12 @@
       "interpretation": "⚠️ Відключення з 23:30 до 24:00"
     }
   ],
-  "timestamp": "2025-12-23T17:50:54.912Z",
+  "timestamp": "2025-12-23T18:15:14.281Z",
   "lastMorningReportDate": "2025-12-23",
   "lastEveningReportDate": "2025-12-13",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-12-23T06:17:00.336Z",
-  "lastTomorrowChangeTimestamp": "2025-12-22T16:56:07.732Z",
+  "lastTomorrowChangeTimestamp": "2025-12-23T18:15:14.281Z",
   "remindersSent": {
     "2025-12-23": [
       "780"
@@ -158,7 +158,8 @@
   },
   "nextOutageNotificationsSent": {
     "2025-12-23": [
-      "780-1200"
+      "780-1200",
+      "1410-1440"
     ]
   }
 }
