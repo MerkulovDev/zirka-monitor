@@ -1,5 +1,5 @@
 {
-  "update": "25.12.2025 18:36",
+  "update": "25.12.2025 19:51",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -22,7 +22,7 @@
     "18": "second",
     "19": "no",
     "20": "no",
-    "21": "no",
+    "21": "yes",
     "22": "yes",
     "23": "yes",
     "24": "yes"
@@ -34,22 +34,22 @@
     "4": "yes",
     "5": "yes",
     "6": "yes",
-    "7": "yes",
-    "8": "yes",
+    "7": "no",
+    "8": "first",
     "9": "yes",
     "10": "yes",
     "11": "yes",
     "12": "yes",
     "13": "yes",
     "14": "yes",
-    "15": "yes",
-    "16": "yes",
-    "17": "yes",
-    "18": "yes",
-    "19": "yes",
-    "20": "yes",
-    "21": "yes",
-    "22": "yes",
+    "15": "second",
+    "16": "no",
+    "17": "no",
+    "18": "no",
+    "19": "no",
+    "20": "no",
+    "21": "no",
+    "22": "first",
     "23": "yes",
     "24": "yes"
   },
@@ -101,28 +101,18 @@
       "range": "19:00-20:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 21,
-      "range": "20:00-21:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2025-12-25T17:47:47.623Z",
+  "timestamp": "2025-12-25T18:14:33.180Z",
   "lastMorningReportDate": "2025-12-25",
   "lastEveningReportDate": "2025-12-13",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2025-12-25T13:42:17.685Z",
-  "lastTomorrowChangeTimestamp": "2025-12-24T17:30:35.541Z",
+  "lastTodayChangeTimestamp": "2025-12-25T18:14:33.180Z",
+  "lastTomorrowChangeTimestamp": "2025-12-25T18:14:33.180Z",
   "remindersSent": {
     "2025-12-25": [
       "1050"
     ]
   },
-  "nextOutageNotificationsSent": {
-    "2025-12-25": [
-      "1050-1260"
-    ]
-  }
+  "nextOutageNotificationsSent": {}
 }
