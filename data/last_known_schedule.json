@@ -1,33 +1,7 @@
 {
-  "update": "27.12.2025 20:00",
+  "update": "28.12.2025 01:57",
   "group": "GPV6.2",
   "fullSchedule": {
-    "1": "yes",
-    "2": "yes",
-    "3": "yes",
-    "4": "yes",
-    "5": "yes",
-    "6": "yes",
-    "7": "yes",
-    "8": "yes",
-    "9": "yes",
-    "10": "yes",
-    "11": "yes",
-    "12": "second",
-    "13": "no",
-    "14": "no",
-    "15": "no",
-    "16": "no",
-    "17": "no",
-    "18": "no",
-    "19": "first",
-    "20": "yes",
-    "21": "yes",
-    "22": "yes",
-    "23": "no",
-    "24": "no"
-  },
-  "tomorrowSchedule": {
     "1": "no",
     "2": "first",
     "3": "yes",
@@ -53,12 +27,68 @@
     "23": "first",
     "24": "yes"
   },
+  "tomorrowSchedule": {
+    "1": "yes",
+    "2": "yes",
+    "3": "yes",
+    "4": "yes",
+    "5": "yes",
+    "6": "yes",
+    "7": "yes",
+    "8": "yes",
+    "9": "yes",
+    "10": "yes",
+    "11": "yes",
+    "12": "yes",
+    "13": "yes",
+    "14": "yes",
+    "15": "yes",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
+    "24": "yes"
+  },
   "schedule": [
+    {
+      "hour": 1,
+      "range": "00:00-01:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 2,
+      "range": "01:00-02:00",
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 01:00 до 01:30"
+    },
+    {
+      "hour": 9,
+      "range": "08:00-09:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 08:30 до 09:00"
+    },
+    {
+      "hour": 10,
+      "range": "09:00-10:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 11,
+      "range": "10:00-11:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
     {
       "hour": 12,
       "range": "11:00-12:00",
-      "value": "second",
-      "interpretation": "⚠️ Відключення з 11:30 до 12:00"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 13,
@@ -81,55 +111,48 @@
     {
       "hour": 16,
       "range": "15:00-16:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 17,
-      "range": "16:00-17:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 18,
-      "range": "17:00-18:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 19,
-      "range": "18:00-19:00",
       "value": "first",
-      "interpretation": "⚠️ Відключення з 18:00 до 18:30"
+      "interpretation": "⚠️ Відключення з 15:00 до 15:30"
+    },
+    {
+      "hour": 20,
+      "range": "19:00-20:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 21,
+      "range": "20:00-21:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 22,
+      "range": "21:00-22:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 23,
       "range": "22:00-23:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 24,
-      "range": "23:00-24:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 22:00 до 22:30"
     }
   ],
-  "timestamp": "2025-12-27T20:49:29.989Z",
-  "lastMorningReportDate": "2025-12-27",
+  "timestamp": "2025-12-28T06:15:34.702Z",
+  "lastMorningReportDate": "2025-12-28",
   "lastEveningReportDate": "2025-12-13",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2025-12-26T06:16:17.361Z",
   "lastTomorrowChangeTimestamp": "2025-12-27T18:13:48.676Z",
   "remindersSent": {
-    "2025-12-27": [
-      "690",
-      "1320"
+    "2025-12-28": [
+      "510"
     ]
   },
   "nextOutageNotificationsSent": {
-    "2025-12-27": [
-      "1320-1440"
+    "2025-12-28": [
+      "510-930"
     ]
   }
 }
