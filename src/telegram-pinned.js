@@ -84,7 +84,41 @@ async function sendTelegramMessage(message, silent = false, pinMessage = false) 
       return false;
     }
   } catch (error) {
-    console.error('❌ Помилка при відправці в Telegram:', error.message);
+    let errorDetails = error.message;
+    
+    // Якщо є відповідь від Telegram API, виводимо детальну інформацію
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      errorDetails = `HTTP ${status}: ${data?.description || data?.error_code || 'Невідома помилка'}`;
+      
+      // Додаткова інформація про тип помилки
+      if (data?.error_code === 400) {
+        errorDetails += ' (Невірний запит - перевірте формат повідомлення)';
+      } else if (data?.error_code === 401) {
+        errorDetails += ' (Невірний токен бота)';
+      } else if (data?.error_code === 403) {
+        errorDetails += ' (Бот не має доступу до чату/каналу)';
+      } else if (data?.error_code === 404) {
+        errorDetails += ' (Чат/канал не знайдено)';
+      } else if (data?.error_code === 429) {
+        errorDetails += ' (Перевищено ліміт запитів - rate limit)';
+      } else if (status >= 500) {
+        errorDetails += ' (Помилка сервера Telegram)';
+      }
+      
+      console.error('❌ Помилка при відправці в Telegram:', errorDetails);
+      if (data) {
+        console.error('   Деталі від Telegram API:', JSON.stringify(data, null, 2));
+      }
+    } else if (error.request) {
+      errorDetails = 'Немає відповіді від сервера Telegram (перевірте інтернет-з\'єднання)';
+      console.error('❌ Помилка при відправці в Telegram:', errorDetails);
+    } else {
+      console.error('❌ Помилка при відправці в Telegram:', errorDetails);
+      console.error('   Stack:', error.stack);
+    }
+    
     return false;
   }
 }
@@ -110,7 +144,17 @@ async function unpinAllChatMessages() {
       return false;
     }
   } catch (error) {
-    console.error('❌ Помилка при відкріпленні:', error.message);
+    let errorDetails = error.message;
+    if (error.response) {
+      const data = error.response.data;
+      errorDetails = `HTTP ${error.response.status}: ${data?.description || data?.error_code || 'Невідома помилка'}`;
+      console.error('❌ Помилка при відкріпленні:', errorDetails);
+      if (data) {
+        console.error('   Деталі:', JSON.stringify(data, null, 2));
+      }
+    } else {
+      console.error('❌ Помилка при відкріпленні:', errorDetails);
+    }
     return false;
   }
 }
@@ -138,7 +182,17 @@ async function pinTelegramMessage(messageId, silent = true) {
       return false;
     }
   } catch (error) {
-    console.error('❌ Помилка при закріпленні:', error.message);
+    let errorDetails = error.message;
+    if (error.response) {
+      const data = error.response.data;
+      errorDetails = `HTTP ${error.response.status}: ${data?.description || data?.error_code || 'Невідома помилка'}`;
+      console.error('❌ Помилка при закріпленні:', errorDetails);
+      if (data) {
+        console.error('   Деталі:', JSON.stringify(data, null, 2));
+      }
+    } else {
+      console.error('❌ Помилка при закріпленні:', errorDetails);
+    }
     return false;
   }
 }
@@ -173,7 +227,41 @@ async function sendTelegramMessageToAdmin(message) {
       return false;
     }
   } catch (error) {
-    console.error('❌ Помилка при відправці адміну:', error.message);
+    let errorDetails = error.message;
+    
+    // Якщо є відповідь від Telegram API, виводимо детальну інформацію
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      errorDetails = `HTTP ${status}: ${data?.description || data?.error_code || 'Невідома помилка'}`;
+      
+      // Додаткова інформація про тип помилки
+      if (data?.error_code === 400) {
+        errorDetails += ' (Невірний запит - перевірте формат повідомлення)';
+      } else if (data?.error_code === 401) {
+        errorDetails += ' (Невірний токен бота)';
+      } else if (data?.error_code === 403) {
+        errorDetails += ' (Бот не має доступу до чату)';
+      } else if (data?.error_code === 404) {
+        errorDetails += ' (Чат не знайдено)';
+      } else if (data?.error_code === 429) {
+        errorDetails += ' (Перевищено ліміт запитів - rate limit)';
+      } else if (status >= 500) {
+        errorDetails += ' (Помилка сервера Telegram)';
+      }
+      
+      console.error('❌ Помилка при відправці адміну:', errorDetails);
+      if (data) {
+        console.error('   Деталі від Telegram API:', JSON.stringify(data, null, 2));
+      }
+    } else if (error.request) {
+      errorDetails = 'Немає відповіді від сервера Telegram (перевірте інтернет-з\'єднання)';
+      console.error('❌ Помилка при відправці адміну:', errorDetails);
+    } else {
+      console.error('❌ Помилка при відправці адміну:', errorDetails);
+      console.error('   Stack:', error.stack);
+    }
+    
     return false;
   }
 }

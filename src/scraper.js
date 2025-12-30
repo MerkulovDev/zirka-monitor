@@ -94,7 +94,10 @@ async function findGroupForAddress(page, factData, csrfToken) {
     throw new Error('Помилка пошуку адреси: ' + searchResult.error);
   }
   
+  // Діагностика: виводимо що отримали від сервера
   if (!searchResult.result || !searchResult.data) {
+    console.error('❌ Неочікуваний формат відповіді від сервера');
+    console.error('Відповідь сервера:', JSON.stringify(searchResult, null, 2));
     throw new Error('Неочікуваний формат відповіді від сервера');
   }
   
