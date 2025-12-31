@@ -45,7 +45,7 @@ function interpretHourValue(hour, value) {
   
   switch(value) {
     case 'yes':
-      return `✅ Світло є`;
+      return `✅ Електроенергія є`;
     case 'no':
       return `❌ Відключення весь проміжок`;
     case 'first':
