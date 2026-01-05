@@ -1,7 +1,33 @@
 {
-  "update": "04.01.2026 19:48",
+  "update": "05.01.2026 05:12",
   "group": "GPV6.2",
   "fullSchedule": {
+    "1": "yes",
+    "2": "yes",
+    "3": "yes",
+    "4": "yes",
+    "5": "yes",
+    "6": "yes",
+    "7": "yes",
+    "8": "no",
+    "9": "no",
+    "10": "yes",
+    "11": "yes",
+    "12": "yes",
+    "13": "yes",
+    "14": "yes",
+    "15": "yes",
+    "16": "yes",
+    "17": "no",
+    "18": "no",
+    "19": "no",
+    "20": "no",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
+    "24": "yes"
+  },
+  "tomorrowSchedule": {
     "1": "yes",
     "2": "yes",
     "3": "yes",
@@ -27,38 +53,49 @@
     "23": "yes",
     "24": "yes"
   },
-  "tomorrowSchedule": {
-    "1": "yes",
-    "2": "yes",
-    "3": "yes",
-    "4": "yes",
-    "5": "yes",
-    "6": "yes",
-    "7": "no",
-    "8": "no",
-    "9": "no",
-    "10": "yes",
-    "11": "yes",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
-    "15": "yes",
-    "16": "yes",
-    "17": "no",
-    "18": "no",
-    "19": "no",
-    "20": "no",
-    "21": "yes",
-    "22": "yes",
-    "23": "yes",
-    "24": "yes"
-  },
-  "schedule": [],
-  "timestamp": "2026-01-04T20:47:51.091Z",
+  "schedule": [
+    {
+      "hour": 8,
+      "range": "07:00-08:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 9,
+      "range": "08:00-09:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 17,
+      "range": "16:00-17:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 18,
+      "range": "17:00-18:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 19,
+      "range": "18:00-19:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 20,
+      "range": "19:00-20:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    }
+  ],
+  "timestamp": "2026-01-05T06:47:47.280Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2025-12-28",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-04T06:43:27.479Z",
+  "lastTodayChangeTimestamp": "2026-01-05T06:47:47.280Z",
   "lastTomorrowChangeTimestamp": "2026-01-04T17:55:26.888Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
