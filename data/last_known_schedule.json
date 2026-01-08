@@ -1,5 +1,5 @@
 {
-  "update": "07.01.2026 23:45",
+  "update": "08.01.2026 05:54",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -9,7 +9,7 @@
     "5": "yes",
     "6": "yes",
     "7": "yes",
-    "8": "no",
+    "8": "yes",
     "9": "no",
     "10": "no",
     "11": "first",
@@ -55,12 +55,6 @@
   },
   "schedule": [
     {
-      "hour": 8,
-      "range": "07:00-08:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
       "hour": 9,
       "range": "08:00-09:00",
       "value": "no",
@@ -103,11 +97,11 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-08T02:14:44.493Z",
+  "timestamp": "2026-01-08T06:48:46.017Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2025-12-28",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-07T19:53:19.169Z",
+  "lastTodayChangeTimestamp": "2026-01-08T06:48:46.017Z",
   "lastTomorrowChangeTimestamp": "2026-01-07T18:40:38.059Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
