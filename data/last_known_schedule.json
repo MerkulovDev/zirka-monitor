@@ -1,5 +1,5 @@
 {
-  "update": "10.01.2026 20:15",
+  "update": "10.01.2026 20:51",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -43,7 +43,7 @@
     "13": "yes",
     "14": "yes",
     "15": "yes",
-    "16": "first",
+    "16": "yes",
     "17": "yes",
     "18": "yes",
     "19": "yes",
@@ -91,12 +91,12 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-10T18:35:52.938Z",
+  "timestamp": "2026-01-10T18:58:15.467Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2025-12-28",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-10T16:35:06.982Z",
-  "lastTomorrowChangeTimestamp": "2026-01-10T18:35:52.938Z",
+  "lastTomorrowChangeTimestamp": "2026-01-10T18:58:15.467Z",
   "remindersSent": {
     "2026-01-10": [
       "690"
