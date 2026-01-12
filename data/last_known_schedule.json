@@ -121,12 +121,16 @@
       "interpretation": "⚠️ Відключення з 19:00 до 19:30"
     }
   ],
-  "timestamp": "2026-01-12T10:32:21.023Z",
+  "timestamp": "2026-01-12T10:58:44.402Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2025-12-28",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-11T06:42:14.941Z",
   "lastTomorrowChangeTimestamp": "2026-01-11T20:29:05.274Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-01-12": [
+      "960-1170"
+    ]
+  }
 }
