@@ -1,25 +1,25 @@
 {
-  "update": "16.01.2026 17:24",
+  "update": "16.01.2026 23:00",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
-    "2": "yes",
-    "3": "yes",
-    "4": "yes",
-    "5": "no",
-    "6": "no",
-    "7": "no",
-    "8": "no",
-    "9": "no",
-    "10": "no",
-    "11": "no",
+    "2": "no",
+    "3": "no",
+    "4": "no",
+    "5": "first",
+    "6": "yes",
+    "7": "yes",
+    "8": "yes",
+    "9": "yes",
+    "10": "yes",
+    "11": "yes",
     "12": "yes",
     "13": "yes",
     "14": "yes",
-    "15": "second",
-    "16": "no",
-    "17": "no",
-    "18": "no",
+    "15": "yes",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
     "19": "yes",
     "20": "yes",
     "21": "yes",
@@ -55,77 +55,35 @@
   },
   "schedule": [
     {
+      "hour": 2,
+      "range": "01:00-02:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 3,
+      "range": "02:00-03:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 4,
+      "range": "03:00-04:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
       "hour": 5,
       "range": "04:00-05:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 6,
-      "range": "05:00-06:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 7,
-      "range": "06:00-07:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 8,
-      "range": "07:00-08:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 9,
-      "range": "08:00-09:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 10,
-      "range": "09:00-10:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 11,
-      "range": "10:00-11:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 15,
-      "range": "14:00-15:00",
-      "value": "second",
-      "interpretation": "⚠️ Відключення з 14:30 до 15:00"
-    },
-    {
-      "hour": 16,
-      "range": "15:00-16:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 17,
-      "range": "16:00-17:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 18,
-      "range": "17:00-18:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 04:00 до 04:30"
     }
   ],
-  "timestamp": "2026-01-16T20:46:31.169Z",
+  "timestamp": "2026-01-17T02:12:08.198Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-16",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-16T15:35:11.408Z",
+  "lastTodayChangeTimestamp": "2026-01-17T02:12:08.198Z",
   "lastTomorrowChangeTimestamp": "2026-01-15T20:32:30.213Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
