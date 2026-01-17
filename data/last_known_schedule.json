@@ -1,5 +1,5 @@
 {
-  "update": "17.01.2026 08:36",
+  "update": "17.01.2026 11:06",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -13,10 +13,10 @@
     "9": "yes",
     "10": "yes",
     "11": "yes",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
-    "15": "yes",
+    "12": "second",
+    "13": "no",
+    "14": "no",
+    "15": "no",
     "16": "yes",
     "17": "yes",
     "18": "yes",
@@ -24,8 +24,8 @@
     "20": "yes",
     "21": "yes",
     "22": "yes",
-    "23": "yes",
-    "24": "yes"
+    "23": "no",
+    "24": "no"
   },
   "tomorrowSchedule": {
     "1": "yes",
@@ -77,14 +77,54 @@
       "range": "04:00-05:00",
       "value": "first",
       "interpretation": "⚠️ Відключення з 04:00 до 04:30"
+    },
+    {
+      "hour": 12,
+      "range": "11:00-12:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 11:30 до 12:00"
+    },
+    {
+      "hour": 13,
+      "range": "12:00-13:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 14,
+      "range": "13:00-14:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 15,
+      "range": "14:00-15:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 23,
+      "range": "22:00-23:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 24,
+      "range": "23:00-24:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-17T08:57:24.854Z",
+  "timestamp": "2026-01-17T09:29:22.166Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-16",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-17T02:12:08.198Z",
+  "lastTodayChangeTimestamp": "2026-01-17T09:29:22.166Z",
   "lastTomorrowChangeTimestamp": "2026-01-15T20:32:30.213Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2026-01-17": [
+      "690"
+    ]
+  },
   "nextOutageNotificationsSent": {}
 }
