@@ -1,5 +1,5 @@
 {
-  "update": "20.01.2026 05:54",
+  "update": "20.01.2026 10:06",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -18,10 +18,10 @@
     "14": "no",
     "15": "no",
     "16": "no",
-    "17": "no",
-    "18": "no",
-    "19": "no",
-    "20": "no",
+    "17": "first",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
     "21": "yes",
     "22": "yes",
     "23": "yes",
@@ -75,26 +75,8 @@
     {
       "hour": 17,
       "range": "16:00-17:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 18,
-      "range": "17:00-18:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 19,
-      "range": "18:00-19:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 20,
-      "range": "19:00-20:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 16:00 до 16:30"
     },
     {
       "hour": 24,
@@ -103,11 +85,11 @@
       "interpretation": "⚠️ Відключення з 23:30 до 24:00"
     }
   ],
-  "timestamp": "2026-01-20T07:57:06.393Z",
+  "timestamp": "2026-01-20T08:45:41.304Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-16",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-20T06:52:33.097Z",
+  "lastTodayChangeTimestamp": "2026-01-20T08:45:41.304Z",
   "lastTomorrowChangeTimestamp": "2026-01-19T17:56:54.930Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
