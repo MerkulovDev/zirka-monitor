@@ -1,5 +1,5 @@
 {
-  "update": "22.01.2026 08:21",
+  "update": "22.01.2026 09:21",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -13,17 +13,17 @@
     "9": "no",
     "10": "no",
     "11": "no",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
+    "12": "no",
+    "13": "no",
+    "14": "no",
     "15": "yes",
     "16": "yes",
     "17": "yes",
-    "18": "yes",
-    "19": "yes",
-    "20": "yes",
-    "21": "yes",
-    "22": "yes",
+    "18": "second",
+    "19": "no",
+    "20": "no",
+    "21": "no",
+    "22": "no",
     "23": "yes",
     "24": "yes"
   },
@@ -77,13 +77,61 @@
       "range": "10:00-11:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 12,
+      "range": "11:00-12:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 13,
+      "range": "12:00-13:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 14,
+      "range": "13:00-14:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 18,
+      "range": "17:00-18:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 17:30 до 18:00"
+    },
+    {
+      "hour": 19,
+      "range": "18:00-19:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 20,
+      "range": "19:00-20:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 21,
+      "range": "20:00-21:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 22,
+      "range": "21:00-22:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-22T06:50:52.409Z",
+  "timestamp": "2026-01-22T07:33:09.324Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-21",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-01-22T06:50:52.409Z",
+  "lastTodayChangeTimestamp": "2026-01-22T07:33:09.324Z",
   "lastTomorrowChangeTimestamp": "2026-01-19T17:56:54.930Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
