@@ -1,5 +1,5 @@
 {
-  "update": "24.01.2026 02:15",
+  "update": "24.01.2026 07:06",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -157,12 +157,16 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-24T02:03:21.820Z",
+  "timestamp": "2026-01-24T06:39:02.982Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-21",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-24T02:03:21.820Z",
   "lastTomorrowChangeTimestamp": "2026-01-23T20:57:52.741Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-01-24": [
+      "690-1110"
+    ]
+  }
 }
