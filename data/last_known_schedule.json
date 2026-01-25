@@ -163,13 +163,17 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-01-25T15:56:54.730Z",
+  "timestamp": "2026-01-25T16:36:04.147Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-21",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-24T12:52:10.253Z",
   "lastTomorrowChangeTimestamp": "2026-01-24T18:40:55.333Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2026-01-25": [
+      "1140"
+    ]
+  },
   "nextOutageNotificationsSent": {
     "2026-01-25": [
       "1140-1440"
