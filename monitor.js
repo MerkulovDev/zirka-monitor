@@ -59,18 +59,6 @@ async function monitor() {
     console.log('🔌 Запуск моніторингу');
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
-    let now = new Date();
-    let hour = now.getHours();
-    let minutes = now.getMinutes();
-    const isMorningWindow = hour === 8 && minutes < 20; // О 8:00-8:20
-    const isNightWindow = hour === 4 && minutes < 20; // О 4:00-4:20
-    const isQuietHoursEarly = hour >= 23 || hour < 8;
-
-    if (isQuietHoursEarly && !isMorningWindow && !isNightWindow) {
-      console.log('🌙 Після 23:00 до 08:00 скрапінг не виконуємо. Очікуємо ранок.');
-      return;
-    }
-
     // Скрапінг даних
     const { factData, group, groupSchedule, tomorrowSchedule } = await scrapeSchedule();
     
@@ -80,13 +68,13 @@ async function monitor() {
     const mergedTodayIntervals = mergeDisconnectionPeriods(schedule);
     
     // Визначаємо поточний час
-    now = new Date();
-    hour = now.getHours();
-    minutes = now.getMinutes();
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
     const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20 - щоденне повідомлення про сьогодні
     const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20 - щоденне повідомлення про завтра
-    const isNightReport = hour >= 2 && hour < 4; // 2:00-4:00 - нічний моніторинг змін
     const isQuietHours = hour >= 23 || hour < 8;
+    const isMorningWindow = isMorningReport;
     const nowMinutes = hour * 60 + minutes;
     const todayKey = getLocalDateKey(now);
     
@@ -159,13 +147,6 @@ async function monitor() {
       }
     }
 
-    // Нічний моніторинг змін (2-4 ночі)
-    let shouldSendNightReport = false;
-    if (isNightReport && comparison.changed) {
-      shouldSendNightReport = true;
-      console.log('🌙 Нічний моніторинг: зафіксовано зміни, готуємо беззвучне повідомлення.');
-    }
-    
     // Логіка нагадувань за 30 хвилин до відключення
     const remindersRaw = lastState && typeof lastState.remindersSent === 'object' && !Array.isArray(lastState.remindersSent)
       ? { ...lastState.remindersSent }
@@ -308,7 +289,7 @@ async function monitor() {
     }
     
     // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
-    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport || shouldSendNightReport) {
+    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
       let title;
       
       // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
@@ -319,10 +300,6 @@ async function monitor() {
       // (не "оновлено", бо це плановий звіт, а не реакція на зміни)
       else if (shouldSendEveningReport) {
         title = '🔌 Графік на завтра';
-      }
-      // Нічне оновлення
-      else if (shouldSendNightReport) {
-        title = '🔌 Нічне оновлення графіку';
       }
       // Зміни поза плановими звітами
       else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
@@ -345,7 +322,7 @@ async function monitor() {
       const shouldPin = shouldSendMorningReport || comparison.scheduleChanged;
       
       if (shouldPin) {
-        if (shouldSendNightReport || isQuietHours) {
+        if (isQuietHours) {
           console.log('📢 Відправляємо повідомлення та закріплюємо його беззвучно...');
         } else {
           console.log('📢 Відправляємо повідомлення та закріплюємо його...');
@@ -415,7 +392,7 @@ async function monitor() {
       );
       
       // Беззвучно: ранкове нагадування, вночі (2-4) або в тихі години (23:00-8:00)
-      const forceSilent = shouldSendMorningReport || shouldSendNightReport || isQuietHours;
+      const forceSilent = shouldSendMorningReport || isQuietHours;
       if (forceSilent) {
         console.log('🔇 Повідомлення буде відправлено беззвучно.');
       }
@@ -439,7 +416,7 @@ async function monitor() {
         // 1. Відправили вечірнє нагадування (shouldSendEveningReport)
         // 2. АБО в вечірній час (isEveningReport) відправили оновлення на завтра
         lastEveningReportDate: sent && (shouldSendEveningReport || (isEveningReport && comparison.tomorrowChanged)) ? todayKey : (lastState?.lastEveningReportDate || null),
-        lastNightUpdateDate: sent && shouldSendNightReport ? todayKey : (lastState?.lastNightUpdateDate || null),
+        lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
         lastTodayChangeTimestamp: comparison.scheduleChanged ? new Date().toISOString() : (lastState?.lastTodayChangeTimestamp || null),
         lastTomorrowChangeTimestamp: comparison.tomorrowChanged ? new Date().toISOString() : (lastState?.lastTomorrowChangeTimestamp || null),
         remindersSent: updatedRemindersSentMap,
