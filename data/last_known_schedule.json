@@ -2,32 +2,6 @@
   "update": "29.01.2026 20:24",
   "group": "GPV6.2",
   "fullSchedule": {
-    "1": "no",
-    "2": "no",
-    "3": "no",
-    "4": "first",
-    "5": "yes",
-    "6": "yes",
-    "7": "yes",
-    "8": "no",
-    "9": "no",
-    "10": "no",
-    "11": "first",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
-    "15": "yes",
-    "16": "yes",
-    "17": "yes",
-    "18": "second",
-    "19": "no",
-    "20": "no",
-    "21": "no",
-    "22": "no",
-    "23": "no",
-    "24": "no"
-  },
-  "tomorrowSchedule": {
     "1": "first",
     "2": "yes",
     "3": "yes",
@@ -53,30 +27,56 @@
     "23": "yes",
     "24": "yes"
   },
+  "tomorrowSchedule": {
+    "1": "yes",
+    "2": "yes",
+    "3": "yes",
+    "4": "yes",
+    "5": "yes",
+    "6": "yes",
+    "7": "yes",
+    "8": "yes",
+    "9": "yes",
+    "10": "yes",
+    "11": "yes",
+    "12": "yes",
+    "13": "yes",
+    "14": "yes",
+    "15": "yes",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
+    "24": "yes"
+  },
   "schedule": [
     {
       "hour": 1,
       "range": "00:00-01:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 2,
-      "range": "01:00-02:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 3,
-      "range": "02:00-03:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 4,
-      "range": "03:00-04:00",
       "value": "first",
-      "interpretation": "⚠️ Відключення з 03:00 до 03:30"
+      "interpretation": "⚠️ Відключення з 00:00 до 00:30"
+    },
+    {
+      "hour": 5,
+      "range": "04:00-05:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 6,
+      "range": "05:00-06:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 7,
+      "range": "06:00-07:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 8,
@@ -99,14 +99,32 @@
     {
       "hour": 11,
       "range": "10:00-11:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 10:00 до 10:30"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 15,
+      "range": "14:00-15:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 14:30 до 15:00"
+    },
+    {
+      "hour": 16,
+      "range": "15:00-16:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 17,
+      "range": "16:00-17:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 18,
       "range": "17:00-18:00",
-      "value": "second",
-      "interpretation": "⚠️ Відключення з 17:30 до 18:00"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 19,
@@ -129,36 +147,16 @@
     {
       "hour": 22,
       "range": "21:00-22:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 23,
-      "range": "22:00-23:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 24,
-      "range": "23:00-24:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2026-01-29T21:47:57.550Z",
+  "timestamp": "2026-01-29T22:16:48.389Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-21",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-28T07:56:22.086Z",
   "lastTomorrowChangeTimestamp": "2026-01-29T18:29:26.325Z",
-  "remindersSent": {
-    "2026-01-29": [
-      "1050"
-    ]
-  },
-  "nextOutageNotificationsSent": {
-    "2026-01-29": [
-      "1050-1440"
-    ]
-  }
+  "remindersSent": {},
+  "nextOutageNotificationsSent": {}
 }
