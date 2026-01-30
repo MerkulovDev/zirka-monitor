@@ -313,7 +313,7 @@ async function monitor() {
       
       // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
       if (shouldSendMorningReport) {
-        title = '🔌 Нагадування графіку на сьогодні';
+        title = '🔌 Нагадування графіка на сьогодні';
       }
       // Вечірній звіт о 21:00 - завжди просто "Графік на завтра"
       // (не "оновлено", бо це плановий звіт, а не реакція на зміни)
@@ -322,7 +322,7 @@ async function monitor() {
       }
       // Нічне оновлення
       else if (shouldSendNightReport) {
-        title = '🔌 Нічне оновлення графіку';
+        title = '🔌 Нічне оновлення графіка';
       }
       // Зміни поза плановими звітами
       else if (comparison.groupChanged && !comparison.scheduleChanged && !comparison.tomorrowChanged) {
@@ -334,7 +334,7 @@ async function monitor() {
       } else if (comparison.tomorrowChanged) {
         title = '🔌 Графік оновлено на завтра';
       } else {
-        title = '🔌 Оновлення графіку відключень';
+        title = '🔌 Оновлення графіка відключень';
       }
       
       // Визначаємо чи закріплювати повідомлення
