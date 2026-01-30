@@ -151,7 +151,7 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2026-01-30T09:02:27.623Z",
+  "timestamp": "2026-01-30T09:54:35.663Z",
   "lastMorningReportDate": "2025-12-29",
   "lastEveningReportDate": "2026-01-21",
   "lastNightUpdateDate": null,
@@ -160,7 +160,8 @@
   "remindersSent": {},
   "nextOutageNotificationsSent": {
     "2026-01-30": [
-      "240-660"
+      "240-660",
+      "870-1290"
     ]
   }
 }
