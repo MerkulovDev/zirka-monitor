@@ -71,7 +71,7 @@ async function monitor() {
     const now = new Date();
     const hour = now.getHours();
     const minutes = now.getMinutes();
-    const isMorningReport = hour === 8 && minutes < 20; // О 8:00-8:20 - щоденне повідомлення про сьогодні
+    const isMorningReport = hour === 8; // О 8:00-9:00 - щоденне повідомлення про сьогодні
     const isEveningReport = hour === 21 && minutes < 20; // О 21:00-21:20 - щоденне повідомлення про завтра
     const isQuietHours = hour >= 23 || hour < 8;
     const isMorningWindow = isMorningReport;
@@ -105,7 +105,7 @@ async function monitor() {
       ? (now.getTime() - new Date(lastTomorrowChangeTimestamp).getTime()) / (1000 * 60 * 60)
       : 999; // Якщо не було змін - вважаємо що давно
 
-    // Ранковий звіт о 8:00 про графік на сьогодні
+    // Ранковий звіт о 8:00-9:00 про графік на сьогодні
     // Відправляємо ТІЛЬКИ якщо:
     // 1. Немає змін зараз
     // 2. Останні зміни НА СЬОГОДНІ були більше 5 годин тому (або не було взагалі)
@@ -292,7 +292,7 @@ async function monitor() {
     if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
       let title;
       
-      // Ранковий звіт о 8:00 - нагадування (тільки якщо давно не було змін)
+    // Ранковий звіт о 8:00-9:00 - нагадування (тільки якщо давно не було змін)
       if (shouldSendMorningReport) {
         title = '🔌 Нагадування графіку на сьогодні';
       }
