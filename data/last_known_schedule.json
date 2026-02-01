@@ -157,12 +157,16 @@
       "interpretation": "⚠️ Відключення з 22:00 до 22:30"
     }
   ],
-  "timestamp": "2026-02-01T02:42:46.597Z",
+  "timestamp": "2026-02-01T05:03:55.336Z",
   "lastMorningReportDate": "2026-01-31",
   "lastEveningReportDate": "2026-01-31",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-01-28T07:56:22.086Z",
   "lastTomorrowChangeTimestamp": "2026-01-31T21:11:19.008Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-02-01": [
+      "510-930"
+    ]
+  }
 }
