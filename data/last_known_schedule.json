@@ -1,9 +1,9 @@
 {
-  "update": "02.02.2026 00:06",
+  "update": "02.02.2026 01:33",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "no",
-    "2": "no",
+    "2": "first",
     "3": "yes",
     "4": "yes",
     "5": "yes",
@@ -63,8 +63,8 @@
     {
       "hour": 2,
       "range": "01:00-02:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 01:00 до 01:30"
     },
     {
       "hour": 6,
@@ -133,11 +133,11 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-01T23:29:15.750Z",
+  "timestamp": "2026-02-01T23:52:47.445Z",
   "lastMorningReportDate": "2026-02-01",
   "lastEveningReportDate": "2026-01-31",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-02-01T07:56:24.141Z",
+  "lastTodayChangeTimestamp": "2026-02-01T23:52:47.445Z",
   "lastTomorrowChangeTimestamp": "2026-02-01T20:42:31.247Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
