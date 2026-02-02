@@ -292,7 +292,7 @@ async function monitor() {
     }
     
     // Якщо є екстрене повідомлення з модалки - надсилаємо лише при зміні
-    if (outageMessage && outageUpdateKey && outageUpdateKey !== lastOutageUpdateKey) {
+    if (outageMessage && outageUpdateKey && outageUpdateKey !== lastOutageUpdateKey && outageMessage !== lastOutageMessage) {
       const outageNotification = `🚨 <b>Поточне відключення</b>\n\n${outageMessage}`;
       await sendTelegramMessage(outageNotification, isQuietHours, false);
     }
