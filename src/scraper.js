@@ -130,18 +130,18 @@ async function findGroupForAddress(page, factData, csrfToken) {
 
   const updateTimestamp = searchResult.updateTimestamp || null;
   const subType = (houseData.sub_type || '').trim();
+  const hasSubType = subType.length > 0;
   const normalizedSubType = subType.toLowerCase();
   const isEmergency = normalizedSubType.includes('екстрен') && normalizedSubType.includes('відключ');
   const isStabilization = normalizedSubType.includes('стабілізаційне відключення');
 
   const outageUpdateKey = updateTimestamp || null;
   let outageMessage = null;
-  if (searchResult.showCurOutageParam && (isEmergency || isStabilization)) {
+  if (searchResult.showCurOutageParam && hasSubType && (isEmergency || isStabilization)) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
     const messageLines = [
-      'За вашою адресою в даний момент відсутня електроенергія',
-      `Причина: ${subType}`,
+      subType,
       startDate ? `Час початку – ${startDate}` : null,
       endDate ? `Орієнтовний час відновлення електроенергії – до ${endDate}` : null,
       updateTimestamp ? `Дата оновлення інформації – ${updateTimestamp}` : null,
