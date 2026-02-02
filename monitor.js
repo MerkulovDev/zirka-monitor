@@ -93,6 +93,9 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
 
+    const lastAttentionMessage = lastState?.attentionMessage || null;
+    const lastOutageMessage = lastState?.outageMessage || null;
+
     // Перевіряємо скільки часу пройшло від останніх змін на сьогодні та завтра
     const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
     const lastTomorrowChangeTimestamp = lastState?.lastTomorrowChangeTimestamp || null;
@@ -288,13 +291,13 @@ async function monitor() {
       updatedNextOutageMap[todayKey] = Array.from(todaysNextOutageSet);
     }
     
-    // Якщо є екстрене повідомлення з модалки - надсилаємо кожен цикл
-    if (attentionMessage) {
+    // Якщо є екстрене повідомлення з модалки - надсилаємо лише при зміні
+    if (attentionMessage && attentionMessage !== lastAttentionMessage) {
       const emergencyMessage = `⚠️ <b>Екстрені відключення</b>\n\n${attentionMessage}`;
       await sendTelegramMessage(emergencyMessage, isQuietHours, false);
     }
 
-    if (outageMessage) {
+    if (outageMessage && outageMessage !== lastOutageMessage) {
       const outageNotification = `🚨 <b>Поточне відключення</b>\n\n${outageMessage}`;
       await sendTelegramMessage(outageNotification, isQuietHours, false);
     }
@@ -419,6 +422,8 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
+        attentionMessage: attentionMessage || null,
+        outageMessage: outageMessage || null,
         // Ранкове повідомлення відправлено якщо:
         // 1. Відправили ранкове нагадування (shouldSendMorningReport)
         // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
@@ -448,6 +453,8 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
+        attentionMessage: attentionMessage || null,
+        outageMessage: outageMessage || null,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
