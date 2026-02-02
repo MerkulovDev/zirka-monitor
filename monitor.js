@@ -60,7 +60,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule, attentionMessage, outageMessage } = await scrapeSchedule();
+    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageUpdateKey } = await scrapeSchedule();
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -93,8 +93,8 @@ async function monitor() {
     
     console.log(`🔍 Порівняння: ${comparison.reason}`);
 
-    const lastAttentionMessage = lastState?.attentionMessage || null;
     const lastOutageMessage = lastState?.outageMessage || null;
+    const lastOutageUpdateKey = lastState?.outageUpdateKey || null;
 
     // Перевіряємо скільки часу пройшло від останніх змін на сьогодні та завтра
     const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
@@ -292,12 +292,7 @@ async function monitor() {
     }
     
     // Якщо є екстрене повідомлення з модалки - надсилаємо лише при зміні
-    if (attentionMessage && attentionMessage !== lastAttentionMessage) {
-      const emergencyMessage = `⚠️ <b>Екстрені відключення</b>\n\n${attentionMessage}`;
-      await sendTelegramMessage(emergencyMessage, isQuietHours, false);
-    }
-
-    if (outageMessage && outageMessage !== lastOutageMessage) {
+    if (outageMessage && outageUpdateKey && outageUpdateKey !== lastOutageUpdateKey) {
       const outageNotification = `🚨 <b>Поточне відключення</b>\n\n${outageMessage}`;
       await sendTelegramMessage(outageNotification, isQuietHours, false);
     }
@@ -422,8 +417,8 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        attentionMessage: attentionMessage || null,
         outageMessage: outageMessage || null,
+        outageUpdateKey: outageUpdateKey || null,
         // Ранкове повідомлення відправлено якщо:
         // 1. Відправили ранкове нагадування (shouldSendMorningReport)
         // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
@@ -453,8 +448,8 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        attentionMessage: attentionMessage || null,
         outageMessage: outageMessage || null,
+        outageUpdateKey: outageUpdateKey || null,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
