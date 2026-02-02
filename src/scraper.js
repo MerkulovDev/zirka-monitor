@@ -132,10 +132,11 @@ async function findGroupForAddress(page, factData, csrfToken) {
   const subType = (houseData.sub_type || '').trim();
   const normalizedSubType = subType.toLowerCase();
   const isEmergency = normalizedSubType.includes('екстрен') && normalizedSubType.includes('відключ');
+  const isStabilization = normalizedSubType.includes('стабілізаційне відключення');
 
   const outageUpdateKey = updateTimestamp || null;
   let outageMessage = null;
-  if (searchResult.showCurOutageParam && isEmergency) {
+  if (searchResult.showCurOutageParam && (isEmergency || isStabilization)) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
     const messageLines = [
@@ -144,12 +145,20 @@ async function findGroupForAddress(page, factData, csrfToken) {
       startDate ? `Час початку – ${startDate}` : null,
       endDate ? `Орієнтовний час відновлення електроенергії – до ${endDate}` : null,
       updateTimestamp ? `Дата оновлення інформації – ${updateTimestamp}` : null,
-      '',
-      'Увага!',
-      'Графіки стабілізаційних відключень не діють. Час відновлення світла може змінюватись відповідно до ситуації в енергосистемі та команд НЕК Укренерго',
     ];
+    if (isEmergency) {
+      messageLines.push(
+        '',
+        'Увага!',
+        'Графіки стабілізаційних відключень не діють. Час відновлення світла може змінюватись відповідно до ситуації в енергосистемі та команд НЕК Укренерго'
+      );
+    }
     outageMessage = messageLines.filter((line) => line !== null).join('\n');
-    console.log('⚠️  Виявлено екстрене відключення для адреси');
+    if (isEmergency) {
+      console.log('⚠️  Виявлено екстрене відключення для адреси');
+    } else {
+      console.log('ℹ️  Виявлено стабілізаційне відключення для адреси');
+    }
   }
   
   return { group, outageMessage, outageUpdateKey };
