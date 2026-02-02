@@ -386,6 +386,7 @@ async function monitor() {
       // Формуємо і відправляємо повідомлення
       // Виділяємо жирним ТІЛЬКИ ті періоди що містять зміни (не плановий звіт)
       const isUpdate = !shouldSendMorningReport && !shouldSendEveningReport;
+      const filterPastTodayUpdates = isUpdate && comparison.scheduleChanged;
       const message = formatScheduleMessage(
         title, 
         group, 
@@ -395,7 +396,8 @@ async function monitor() {
           highlightChanges: isUpdate,
           changedHours: comparison.changedHours || [],
           changedTomorrowHours: comparison.changedTomorrowHours || [],
-          filterPastToday: shouldSendMorningReport // Фільтруємо пройдені періоди для ранкового нагадування
+          filterPastToday: shouldSendMorningReport || filterPastTodayUpdates,
+          filterPastTodayBufferMinutes: 60
         }
       );
       

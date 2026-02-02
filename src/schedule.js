@@ -123,6 +123,7 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
     hideGroup = false,
     hideUpdate = false,
     filterPastToday = false,
+    filterPastTodayBufferMinutes = 0,
     hideEmptyTomorrowUntilAfternoon = false,
     highlightChanges = false,
     changedHours = [], // Години які змінились для сьогодні
@@ -178,7 +179,8 @@ function formatScheduleMessage(title, group, scheduleSections, updateTime, optio
     let intervals = mergeDisconnectionPeriods(data);
 
     if (filterPastToday && labelLower.startsWith('сьогодні')) {
-      intervals = intervals.filter(interval => interval.endMinutes > nowMinutes);
+      const buffer = Number.isFinite(filterPastTodayBufferMinutes) ? filterPastTodayBufferMinutes : 0;
+      intervals = intervals.filter(interval => (interval.endMinutes + buffer) > nowMinutes);
     }
 
     if (
