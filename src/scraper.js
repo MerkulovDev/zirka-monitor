@@ -169,6 +169,96 @@ async function scrapeSchedule() {
     }
     
     console.log('✅ Графік отримано (оновлено:', factData.update + ')');
+
+    const attentionData = await page.evaluate(() => {
+      const modal = document.querySelector('#modal-attention');
+      if (!modal) {
+        return { bodyText: null, messageText: null };
+      }
+
+      const bodyText = modal.querySelector('.m-attention__body')?.textContent?.trim() || null;
+      const messageText = modal.querySelector('.m-attention__text')?.textContent?.trim() || null;
+      return { bodyText, messageText };
+    });
+
+    const emergencyPhrase = 'введені екстрені відключення електроенергії';
+    const attentionMessage = attentionData.bodyText
+      && attentionData.bodyText.toLowerCase().includes(emergencyPhrase)
+      ? attentionData.messageText
+      : null;
+
+    if (attentionMessage) {
+      console.log('⚠️  Виявлено повідомлення про екстрені відключення');
+    }
+
+    const formatCityValue = (value) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return trimmed;
+      const lower = trimmed.toLowerCase();
+      if (lower.startsWith('м.') || lower.startsWith('м ')) {
+        return trimmed;
+      }
+      return `м. ${trimmed}`;
+    };
+
+    const formatStreetValue = (value) => {
+      const trimmed = (value || '').trim();
+      if (!trimmed) return trimmed;
+      const lower = trimmed.toLowerCase();
+      if (lower.startsWith('вул.') || lower.startsWith('вул ')) {
+        return trimmed;
+      }
+      return `вул. ${trimmed}`;
+    };
+
+    const setAutocompleteInput = async (selector, value) => {
+      await page.click(selector, { clickCount: 3 });
+      await page.keyboard.press('Backspace');
+      if (value) {
+        await page.type(selector, value, { delay: 40 });
+        await new Promise(resolve => setTimeout(resolve, 800));
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('Enter');
+      }
+    };
+
+    let outageMessage = null;
+    try {
+      await page.waitForSelector('#city', { timeout: 10000 });
+      await setAutocompleteInput('#city', formatCityValue(CONFIG.ADDRESS_CITY));
+      await page.waitForSelector('#street', { timeout: 10000 });
+      await setAutocompleteInput('#street', formatStreetValue(CONFIG.ADDRESS_STREET));
+
+      await page.waitForFunction(() => {
+        const input = document.querySelector('#house_num');
+        return input && !input.disabled;
+      }, { timeout: 10000 });
+
+      await setAutocompleteInput('#house_num', CONFIG.ADDRESS_HOUSE);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const outageData = await page.evaluate(() => {
+        const block = document.querySelector('#showCurOutage');
+        if (!block) {
+          return { isActive: false, text: null };
+        }
+        return {
+          isActive: block.classList.contains('active'),
+          text: block.textContent ? block.textContent.trim() : null,
+        };
+      });
+
+      if (outageData.isActive && outageData.text) {
+        const normalized = outageData.text.toLowerCase();
+        const hasNoPower = normalized.includes('відсутня електроенергія');
+        const hasEmergency = normalized.includes('екстренн') && normalized.includes('відключ');
+        if (hasNoPower && hasEmergency) {
+          outageMessage = outageData.text;
+        }
+      }
+    } catch (error) {
+      console.log('⚠️  Не вдалося отримати статус поточного відключення:', error.message);
+    }
     
     // Отримуємо CSRF токен
     const csrfToken = await page.evaluate(() => {
@@ -216,6 +306,8 @@ async function scrapeSchedule() {
       group,
       groupSchedule,
       tomorrowSchedule,
+      attentionMessage,
+      outageMessage,
     };
     
   } catch (error) {

@@ -60,7 +60,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule } = await scrapeSchedule();
+    const { factData, group, groupSchedule, tomorrowSchedule, attentionMessage, outageMessage } = await scrapeSchedule();
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -288,6 +288,17 @@ async function monitor() {
       updatedNextOutageMap[todayKey] = Array.from(todaysNextOutageSet);
     }
     
+    // Якщо є екстрене повідомлення з модалки - надсилаємо кожен цикл
+    if (attentionMessage) {
+      const emergencyMessage = `⚠️ <b>Екстрені відключення</b>\n\n${attentionMessage}`;
+      await sendTelegramMessage(emergencyMessage, isQuietHours, false);
+    }
+
+    if (outageMessage) {
+      const outageNotification = `🚨 <b>Поточне відключення</b>\n\n${outageMessage}`;
+      await sendTelegramMessage(outageNotification, isQuietHours, false);
+    }
+
     // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
     if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
       let title;
