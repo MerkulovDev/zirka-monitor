@@ -151,7 +151,9 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-02T08:30:05.946Z",
+  "timestamp": "2026-02-02T08:37:16.911Z",
+  "attentionMessage": null,
+  "outageMessage": null,
   "lastMorningReportDate": "2026-02-02",
   "lastEveningReportDate": "2026-01-31",
   "lastNightUpdateDate": null,
