@@ -137,6 +137,16 @@ async function findGroupForAddress(page, factData, csrfToken) {
 
   const outageUpdateKey = updateTimestamp || null;
   let outageMessage = null;
+  let outageMessageBase = null;
+  let outageStatus = 'none';
+  if (!hasSubType) {
+    outageStatus = 'cleared';
+  } else if (isEmergency || isStabilization) {
+    outageStatus = 'active';
+  } else {
+    outageStatus = 'unknown';
+  }
+
   if (searchResult.showCurOutageParam && hasSubType && (isEmergency || isStabilization)) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
@@ -153,7 +163,11 @@ async function findGroupForAddress(page, factData, csrfToken) {
         'Графіки стабілізаційних відключень не діють. Час відновлення світла може змінюватись відповідно до ситуації в енергосистемі та команд НЕК Укренерго'
       );
     }
-    outageMessage = messageLines.filter((line) => line !== null).join('\n');
+    const filteredLines = messageLines.filter((line) => line !== null);
+    outageMessage = filteredLines.join('\n');
+    outageMessageBase = filteredLines
+      .filter((line) => !line.startsWith('Дата оновлення інформації – '))
+      .join('\n');
     if (isEmergency) {
       console.log('⚠️  Виявлено екстрене відключення для адреси');
     } else {
@@ -161,7 +175,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
     }
   }
   
-  return { group, outageMessage, outageUpdateKey };
+  return { group, outageMessage, outageMessageBase, outageUpdateKey, outageStatus };
 }
 
 // Основна функція скрапінгу
@@ -214,7 +228,7 @@ async function scrapeSchedule() {
     }
     
     // Шукаємо групу для адреси
-    const { group, outageMessage, outageUpdateKey } = await findGroupForAddress(page, factData, csrfToken);
+    const { group, outageMessage, outageMessageBase, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
     
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
@@ -250,7 +264,9 @@ async function scrapeSchedule() {
       groupSchedule,
       tomorrowSchedule,
       outageMessage,
+      outageMessageBase,
       outageUpdateKey,
+      outageStatus,
     };
     
   } catch (error) {
