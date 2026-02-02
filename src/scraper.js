@@ -165,8 +165,10 @@ async function findGroupForAddress(page, factData, csrfToken) {
     }
     const filteredLines = messageLines.filter((line) => line !== null);
     outageMessage = filteredLines.join('\n');
+    const updateLinePrefix = 'Дата оновлення інформації – ';
     outageMessageBase = filteredLines
-      .filter((line) => !line.startsWith('Дата оновлення інформації – '))
+      .map((line) => line.trim())
+      .filter((line) => !line.startsWith(updateLinePrefix))
       .join('\n');
     if (isEmergency) {
       console.log('⚠️  Виявлено екстрене відключення для адреси');

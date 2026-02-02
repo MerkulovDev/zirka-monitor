@@ -50,6 +50,16 @@ function formatDurationForReminder(totalMinutes) {
   return parts.join(' ');
 }
 
+function normalizeOutageBase(message) {
+  if (!message) return null;
+  const updateLinePrefix = 'Дата оновлення інформації – ';
+  return message
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith(updateLinePrefix))
+    .join('\n');
+}
+
 // Перевіряємо конфігурацію при запуску
 validateConfig();
 
@@ -294,10 +304,11 @@ async function monitor() {
     }
     
     // Повідомлення про аварійні/стабілізаційні відключення — тільки при зміні
-    if (outageMessage && outageMessageBase && outageUpdateKey) {
-      const baseChanged = outageMessageBase !== lastOutageMessageBase;
-      const updateChanged = outageUpdateKey !== lastOutageUpdateKey;
-      if ((baseChanged || updateChanged) && baseChanged) {
+    if (outageMessage && outageUpdateKey) {
+      const normalizedCurrentBase = normalizeOutageBase(outageMessageBase || outageMessage);
+      const normalizedLastBase = normalizeOutageBase(lastOutageMessageBase || lastOutageMessage);
+      const baseChanged = normalizedCurrentBase && normalizedCurrentBase !== normalizedLastBase;
+      if (baseChanged) {
         await sendTelegramMessage(outageMessage, isQuietHours, false);
       }
     }
@@ -431,7 +442,7 @@ async function monitor() {
         schedule: schedule,
         timestamp: new Date().toISOString(),
         outageMessage: outageMessage || null,
-        outageMessageBase: outageMessageBase || null,
+        outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         // Ранкове повідомлення відправлено якщо:
@@ -464,7 +475,7 @@ async function monitor() {
         schedule: schedule,
         timestamp: new Date().toISOString(),
         outageMessage: outageMessage || null,
-        outageMessageBase: outageMessageBase || null,
+        outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
