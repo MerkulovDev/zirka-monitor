@@ -108,6 +108,7 @@ async function monitor() {
     const lastOutageSignature = lastState?.outageSignature || null;
     const lastOutageUpdateKey = lastState?.outageUpdateKey || null;
     const lastOutageStatus = lastState?.outageStatus || null;
+    const lastEmergencyAlertSent = lastState?.lastEmergencyAlertSent === true;
 
     // Перевіряємо скільки часу пройшло від останніх змін на сьогодні та завтра
     const lastTodayChangeTimestamp = lastState?.lastTodayChangeTimestamp || null;
@@ -304,7 +305,10 @@ async function monitor() {
       updatedNextOutageMap[todayKey] = Array.from(todaysNextOutageSet);
     }
     
-    // Повідомлення про аварійні/стабілізаційні відключення — тільки при зміні
+    let didSendEmergencyAlert = false;
+    let didSendCancelledAlert = false;
+
+    // Повідомлення про екстрене відключення — тільки при зміні (стабілізаційні не сламо)
     if (outageMessage && outageUpdateKey) {
       const normalizedCurrentBase = normalizeOutageBase(outageMessageBase || outageMessage);
       const normalizedLastBase = normalizeOutageBase(lastOutageMessageBase || lastOutageMessage);
@@ -312,15 +316,19 @@ async function monitor() {
       const baseChanged = normalizedCurrentBase && normalizedCurrentBase !== normalizedLastBase;
       if (signatureChanged || baseChanged) {
         await sendTelegramMessage(outageMessage, isQuietHours, false);
+        didSendEmergencyAlert = true;
       }
     }
 
-    // Якщо екстрені змінились на пустий параметр або стабілізаційні — повідомляємо про скасування екстрених
-    const emergencyEnded = lastOutageStatus === 'active' && (outageStatus === 'cleared' || outageStatus === 'stabilization');
+    // Скасування екстрених — тільки якщо раніше ми справді надсилали повідомлення про екстрене
+    const emergencyEnded = lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
     if (emergencyEnded) {
       const clearedMessage = 'ℹ️ Екстрене відключення скасовано — далі діють графіки погодинних відключень.';
       await sendTelegramMessage(clearedMessage, isQuietHours, false);
+      didSendCancelledAlert = true;
     }
+
+    const nextEmergencyAlertSent = didSendEmergencyAlert || (!didSendCancelledAlert && outageStatus === 'active' && lastEmergencyAlertSent);
 
     // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
     if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
@@ -449,6 +457,7 @@ async function monitor() {
         outageSignature: outageSignature || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
+        lastEmergencyAlertSent: nextEmergencyAlertSent,
         // Ранкове повідомлення відправлено якщо:
         // 1. Відправили ранкове нагадування (shouldSendMorningReport)
         // 2. АБО в ранковий час (isMorningWindow) відправили оновлення на сьогодні
@@ -483,6 +492,7 @@ async function monitor() {
         outageSignature: outageSignature || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
+        lastEmergencyAlertSent: nextEmergencyAlertSent,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
         lastNightUpdateDate: lastState?.lastNightUpdateDate || null,
