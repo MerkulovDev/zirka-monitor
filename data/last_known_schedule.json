@@ -1,5 +1,5 @@
 {
-  "update": "03.02.2026 00:06",
+  "update": "03.02.2026 03:33",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -18,10 +18,10 @@
     "14": "no",
     "15": "no",
     "16": "no",
-    "17": "no",
-    "18": "no",
-    "19": "no",
-    "20": "no",
+    "17": "first",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
     "21": "yes",
     "22": "yes",
     "23": "yes",
@@ -123,26 +123,8 @@
     {
       "hour": 17,
       "range": "16:00-17:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 18,
-      "range": "17:00-18:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 19,
-      "range": "18:00-19:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 20,
-      "range": "19:00-20:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 16:00 до 16:30"
     },
     {
       "hour": 24,
@@ -151,15 +133,15 @@
       "interpretation": "⚠️ Відключення з 23:30 до 24:00"
     }
   ],
-  "timestamp": "2026-02-02T23:32:20.865Z",
-  "outageMessage": null,
-  "outageMessageBase": null,
-  "outageUpdateKey": "01:22 03.02.2026",
-  "outageStatus": "cleared",
+  "timestamp": "2026-02-03T02:30:04.025Z",
+  "outageMessage": "Стабілізаційне відключення (Згідно графіку погодинних відключень)\nЧас початку – 02:40 03.02.2026\nОрієнтовний час відновлення електроенергії – до 09:30 03.02.2026\nДата оновлення інформації – 04:20 03.02.2026",
+  "outageMessageBase": "Стабілізаційне відключення (Згідно графіку погодинних відключень)\nЧас початку – 02:40 03.02.2026\nОрієнтовний час відновлення електроенергії – до 09:30 03.02.2026",
+  "outageUpdateKey": "04:20 03.02.2026",
+  "outageStatus": "active",
   "lastMorningReportDate": "2026-02-02",
   "lastEveningReportDate": "2026-01-31",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-02-02T23:32:20.865Z",
+  "lastTodayChangeTimestamp": "2026-02-03T02:30:04.025Z",
   "lastTomorrowChangeTimestamp": "2026-02-02T17:56:42.567Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
