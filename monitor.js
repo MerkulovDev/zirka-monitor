@@ -70,7 +70,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageUpdateKey, outageStatus } = await scrapeSchedule();
+    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus } = await scrapeSchedule();
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -105,6 +105,7 @@ async function monitor() {
 
     const lastOutageMessage = lastState?.outageMessage || null;
     const lastOutageMessageBase = lastState?.outageMessageBase || null;
+    const lastOutageSignature = lastState?.outageSignature || null;
     const lastOutageUpdateKey = lastState?.outageUpdateKey || null;
     const lastOutageStatus = lastState?.outageStatus || null;
 
@@ -307,15 +308,17 @@ async function monitor() {
     if (outageMessage && outageUpdateKey) {
       const normalizedCurrentBase = normalizeOutageBase(outageMessageBase || outageMessage);
       const normalizedLastBase = normalizeOutageBase(lastOutageMessageBase || lastOutageMessage);
+      const signatureChanged = outageSignature && outageSignature !== lastOutageSignature;
       const baseChanged = normalizedCurrentBase && normalizedCurrentBase !== normalizedLastBase;
-      if (baseChanged) {
+      if (signatureChanged || baseChanged) {
         await sendTelegramMessage(outageMessage, isQuietHours, false);
       }
     }
 
-    // Якщо sub_type став пустим після активного стану — повідомляємо про скасування
-    if (outageStatus === 'cleared' && lastOutageStatus === 'active') {
-      const clearedMessage = 'ℹ️ Екстренні/стабілізаційні відключення скасовано — далі діють графіки погодинних відключень.';
+    // Якщо екстрені змінились на пустий параметр або стабілізаційні — повідомляємо про скасування екстрених
+    const emergencyEnded = lastOutageStatus === 'active' && (outageStatus === 'cleared' || outageStatus === 'stabilization');
+    if (emergencyEnded) {
+      const clearedMessage = 'ℹ️ Екстрене відключення скасовано — далі діють графіки погодинних відключень.';
       await sendTelegramMessage(clearedMessage, isQuietHours, false);
     }
 
@@ -443,6 +446,7 @@ async function monitor() {
         timestamp: new Date().toISOString(),
         outageMessage: outageMessage || null,
         outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
+        outageSignature: outageSignature || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         // Ранкове повідомлення відправлено якщо:
@@ -476,6 +480,7 @@ async function monitor() {
         timestamp: new Date().toISOString(),
         outageMessage: outageMessage || null,
         outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
+        outageSignature: outageSignature || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,

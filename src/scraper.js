@@ -138,16 +138,20 @@ async function findGroupForAddress(page, factData, csrfToken) {
   const outageUpdateKey = updateTimestamp || null;
   let outageMessage = null;
   let outageMessageBase = null;
+  let outageSignature = null;
   let outageStatus = 'none';
   if (!hasSubType) {
     outageStatus = 'cleared';
-  } else if (isEmergency || isStabilization) {
+  } else if (isEmergency) {
     outageStatus = 'active';
+  } else if (isStabilization) {
+    outageStatus = 'stabilization';
   } else {
     outageStatus = 'unknown';
   }
 
-  if (searchResult.showCurOutageParam && hasSubType && (isEmergency || isStabilization)) {
+  // Повідомлення в ТГ тільки для екстрених; стабілізаційні поки не відправляємо
+  if (searchResult.showCurOutageParam && hasSubType && isEmergency) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
     const messageLines = [
@@ -170,14 +174,17 @@ async function findGroupForAddress(page, factData, csrfToken) {
       .map((line) => line.trim())
       .filter((line) => !line.startsWith(updateLinePrefix))
       .join('\n');
-    if (isEmergency) {
-      console.log('⚠️  Виявлено екстрене відключення для адреси');
-    } else {
-      console.log('ℹ️  Виявлено стабілізаційне відключення для адреси');
-    }
+    outageSignature = JSON.stringify({
+      subType,
+      startDate,
+      endDate
+    });
+    console.log('⚠️  Виявлено екстрене відключення для адреси');
+  } else if (hasSubType && isStabilization) {
+    console.log('ℹ️  Стабілізаційне відключення (повідомлення в ТГ вимкнено)');
   }
   
-  return { group, outageMessage, outageMessageBase, outageUpdateKey, outageStatus };
+  return { group, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus };
 }
 
 // Основна функція скрапінгу
@@ -230,7 +237,7 @@ async function scrapeSchedule() {
     }
     
     // Шукаємо групу для адреси
-    const { group, outageMessage, outageMessageBase, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
+    const { group, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
     
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
@@ -267,6 +274,7 @@ async function scrapeSchedule() {
       tomorrowSchedule,
       outageMessage,
       outageMessageBase,
+      outageSignature,
       outageUpdateKey,
       outageStatus,
     };
