@@ -151,16 +151,20 @@
       "interpretation": "⚠️ Відключення з 23:30 до 24:00"
     }
   ],
-  "timestamp": "2026-02-03T06:56:55.359Z",
-  "outageMessage": "Стабілізаційне відключення (Згідно графіку погодинних відключень)\nЧас початку – 02:40 03.02.2026\nОрієнтовний час відновлення електроенергії – до 09:30 03.02.2026\nДата оновлення інформації – 08:51 03.02.2026",
-  "outageMessageBase": "Стабілізаційне відключення (Згідно графіку погодинних відключень)\nЧас початку – 02:40 03.02.2026\nОрієнтовний час відновлення електроенергії – до 09:30 03.02.2026",
-  "outageUpdateKey": "08:51 03.02.2026",
-  "outageStatus": "active",
+  "timestamp": "2026-02-03T07:47:23.994Z",
+  "outageMessage": null,
+  "outageMessageBase": null,
+  "outageUpdateKey": "09:41 03.02.2026",
+  "outageStatus": "cleared",
   "lastMorningReportDate": "2026-02-02",
   "lastEveningReportDate": "2026-01-31",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-02-03T05:36:58.604Z",
   "lastTomorrowChangeTimestamp": "2026-02-02T17:56:42.567Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-02-03": [
+      "780-1200"
+    ]
+  }
 }
