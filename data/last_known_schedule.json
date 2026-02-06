@@ -163,14 +163,14 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2026-02-06T05:38:16.111Z",
+  "timestamp": "2026-02-06T06:59:59.201Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
-  "outageUpdateKey": "07:25 06.02.2026",
+  "outageUpdateKey": "08:51 06.02.2026",
   "outageStatus": "stabilization",
   "lastEmergencyAlertSent": false,
-  "lastMorningReportDate": "2026-02-04",
+  "lastMorningReportDate": "2026-02-06",
   "lastEveningReportDate": "2026-02-05",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-02-05T02:26:04.070Z",
