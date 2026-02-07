@@ -153,7 +153,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
 
   let outagePeriodText = null;
 
-  // Повідомлення в ТГ тільки для екстрених; стабілізаційні поки не відправляємо
+  // Повідомлення в ТГ тільки для аварійних; стабілізаційні поки не відправляємо
   if (searchResult.showCurOutageParam && hasSubType && isEmergency) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
@@ -162,7 +162,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
     outageMessage = [
       '⚠️ Увага!',
       '',
-      '⚡ Екстренні відключення.',
+      '⚡ Аварійні відключення.',
       '',
       'Графіки стабілізаційних відключень не діють.',
       '',
@@ -172,7 +172,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
     const updateLinePrefix = 'Дата оновлення інформації – ';
     outageMessageBase = [
       'Увага!',
-      'Екстренні відключення.',
+      'Аварійні відключення.',
       'Графіки стабілізаційних відключень не діють.',
       periodStr ? `Орієнтовний період: ${periodStr}` : null,
     ].filter(Boolean).join('\n');
@@ -182,7 +182,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
       endDate
     });
     outageEmergencyKey = JSON.stringify({ subType, startDate });
-    console.log('⚠️  Виявлено екстрене відключення для адреси');
+    console.log('⚠️  Виявлено аварійне відключення для адреси');
   } else if (hasSubType && isStabilization) {
     console.log('ℹ️  Стабілізаційне відключення (повідомлення в ТГ вимкнено)');
   }

@@ -14,7 +14,7 @@ function getLocalDateKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-// Парсить час оновлення з графіка (DD.MM.YYYY HH:mm) або екстрених (HH:mm DD.MM.YYYY) для порівняння порядку
+// Парсить час оновлення з графіка (DD.MM.YYYY HH:mm) або аварійних (HH:mm DD.MM.YYYY) для порівняння порядку
 function parseUpdateTimestamp(str) {
   if (!str || typeof str !== 'string') return null;
   const s = str.trim();
@@ -330,7 +330,7 @@ async function monitor() {
     let didSendEmergencyAlert = false;
     let didSendCancelledAlert = false;
 
-    // Визначаємо, чи потрібно відправляти оновлення графіка та екстрені, і в якому порядку (за часом оновлення інфи)
+    // Визначаємо, чи потрібно відправляти оновлення графіка та аварійні, і в якому порядку (за часом оновлення інфи)
     const needEmergency = !!(outageMessage && outageEmergencyKey && outageEmergencyKey !== lastOutageEmergencyKey);
     const needSchedule = comparison.changed || shouldSendMorningReport || shouldSendEveningReport;
     let scheduleFirst = false;
@@ -339,7 +339,7 @@ async function monitor() {
       const emergencyTime = parseUpdateTimestamp(outageUpdateKey);
       if (scheduleTime != null && emergencyTime != null) {
         scheduleFirst = scheduleTime <= emergencyTime;
-        console.log(`📅 Порядок оновлень: спочатку ${scheduleFirst ? 'графік' : 'екстрені'} (графік ${factData.update}, екстрені ${outageUpdateKey})`);
+        console.log(`📅 Порядок оновлень: спочатку ${scheduleFirst ? 'графік' : 'аварійні'} (графік ${factData.update}, аварійні ${outageUpdateKey})`);
       }
     }
     didSendEmergencyAlert = needEmergency;
@@ -349,7 +349,7 @@ async function monitor() {
       outageSignature && outageSignature !== lastOutageSignature && lastEmergencyAlertSent;
     if (sameEmergencyPeriodChanged) {
       const periodUpdateMessage = [
-        '🕐 Зміна періоду екстренних відключень:',
+        '🕐 Зміна періоду аварійних відключень:',
         outagePeriodText ? `\n${outagePeriodText}` : '',
         outageUpdateKey ? `\n📅 Оновлено: ${outageUpdateKey}` : '',
       ].filter(Boolean).join('');
@@ -358,10 +358,10 @@ async function monitor() {
       }
     }
 
-    // Скасування екстрених — тільки якщо раніше ми справді надсилали повідомлення про екстрене
+    // Скасування аварійних — тільки якщо раніше ми справді надсилали повідомлення про аварійне
     const emergencyEnded = lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
     if (emergencyEnded) {
-      const clearedMessage = 'ℹ️ Екстрене відключення скасовано — далі діють графіки погодинних відключень.';
+      const clearedMessage = 'ℹ️ Аварійне відключення скасовано — далі діють графіки погодинних відключень.';
       await sendTelegramMessage(clearedMessage, isQuietHours, false);
       didSendCancelledAlert = true;
     }
