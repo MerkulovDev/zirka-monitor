@@ -139,6 +139,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
   let outageMessage = null;
   let outageMessageBase = null;
   let outageSignature = null;
+  let outageEmergencyKey = null;
   let outageStatus = 'none';
   if (!hasSubType) {
     outageStatus = 'cleared';
@@ -150,41 +151,43 @@ async function findGroupForAddress(page, factData, csrfToken) {
     outageStatus = 'unknown';
   }
 
+  let outagePeriodText = null;
+
   // Повідомлення в ТГ тільки для екстрених; стабілізаційні поки не відправляємо
   if (searchResult.showCurOutageParam && hasSubType && isEmergency) {
     const startDate = houseData.start_date || '';
     const endDate = houseData.end_date || '';
-    const messageLines = [
-      subType,
-      startDate ? `Час початку – ${startDate}` : null,
-      endDate ? `Орієнтовний час відновлення електроенергії – до ${endDate}` : null,
-      updateTimestamp ? `Дата оновлення інформації – ${updateTimestamp}` : null,
-    ];
-    if (isEmergency) {
-      messageLines.push(
-        '',
-        'Увага!',
-        'Графіки стабілізаційних відключень не діють. Час відновлення світла може змінюватись відповідно до ситуації в енергосистемі та команд НЕК Укренерго'
-      );
-    }
-    const filteredLines = messageLines.filter((line) => line !== null);
-    outageMessage = filteredLines.join('\n');
+    const periodStr = [startDate, endDate].filter(Boolean).join(' – ');
+    outagePeriodText = periodStr || null;
+    outageMessage = [
+      '⚠️ Увага!',
+      '',
+      '⚡ Екстренні відключення.',
+      '',
+      'Графіки стабілізаційних відключень не діють.',
+      '',
+      periodStr ? `🕐 Орієнтовний період: ${periodStr}` : null,
+      updateTimestamp ? `📅 Дата оновлення інформації – ${updateTimestamp}` : null,
+    ].filter((line) => line !== null).join('\n');
     const updateLinePrefix = 'Дата оновлення інформації – ';
-    outageMessageBase = filteredLines
-      .map((line) => line.trim())
-      .filter((line) => !line.startsWith(updateLinePrefix))
-      .join('\n');
+    outageMessageBase = [
+      'Увага!',
+      'Екстренні відключення.',
+      'Графіки стабілізаційних відключень не діють.',
+      periodStr ? `Орієнтовний період: ${periodStr}` : null,
+    ].filter(Boolean).join('\n');
     outageSignature = JSON.stringify({
       subType,
       startDate,
       endDate
     });
+    outageEmergencyKey = JSON.stringify({ subType, startDate });
     console.log('⚠️  Виявлено екстрене відключення для адреси');
   } else if (hasSubType && isStabilization) {
     console.log('ℹ️  Стабілізаційне відключення (повідомлення в ТГ вимкнено)');
   }
-  
-  return { group, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus };
+
+  return { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus };
 }
 
 // Основна функція скрапінгу
@@ -237,7 +240,7 @@ async function scrapeSchedule() {
     }
     
     // Шукаємо групу для адреси
-    const { group, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
+    const { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
     
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
@@ -275,6 +278,8 @@ async function scrapeSchedule() {
       outageMessage,
       outageMessageBase,
       outageSignature,
+      outageEmergencyKey,
+      outagePeriodText,
       outageUpdateKey,
       outageStatus,
     };
