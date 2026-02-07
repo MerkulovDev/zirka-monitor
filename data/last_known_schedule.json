@@ -169,11 +169,11 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-07T11:34:48.004Z",
+  "timestamp": "2026-02-07T11:52:46.370Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
-  "outageUpdateKey": "13:25 07.02.2026",
+  "outageUpdateKey": "13:40 07.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-07",
