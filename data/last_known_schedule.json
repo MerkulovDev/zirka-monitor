@@ -1,5 +1,5 @@
 {
-  "update": "07.02.2026 22:54",
+  "update": "07.02.2026 23:33",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -181,14 +181,14 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-07T21:00:59.083Z",
-  "outageMessage": null,
-  "outageMessageBase": null,
-  "outageSignature": null,
-  "outageEmergencyKey": null,
-  "outageUpdateKey": "22:52 07.02.2026",
-  "outageStatus": "cleared",
-  "lastEmergencyAlertSent": false,
+  "timestamp": "2026-02-07T21:39:05.902Z",
+  "outageMessage": "⚠️ Увага!\n\n⚡ Аварійні відключення.\n\nГрафіки стабілізаційних відключень не діють.\n\n🕐 Орієнтовний період: 15:02 07.02.2026 – 03:00 08.02.2026\n📅 Дата оновлення інформації – 23:38 07.02.2026",
+  "outageMessageBase": "Увага!\nАварійні відключення.\nГрафіки стабілізаційних відключень не діють.\nОрієнтовний період: 15:02 07.02.2026 – 03:00 08.02.2026",
+  "outageSignature": "{\"subType\":\"Екстренні відключення (Аварійне без застосування графіку погодинних відключень)\",\"startDate\":\"15:02 07.02.2026\",\"endDate\":\"03:00 08.02.2026\"}",
+  "outageEmergencyKey": "{\"subType\":\"Екстренні відключення (Аварійне без застосування графіку погодинних відключень)\",\"startDate\":\"15:02 07.02.2026\"}",
+  "outageUpdateKey": "23:38 07.02.2026",
+  "outageStatus": "active",
+  "lastEmergencyAlertSent": true,
   "lastMorningReportDate": "2026-02-07",
   "lastEveningReportDate": "2026-02-05",
   "lastNightUpdateDate": null,
