@@ -14,6 +14,27 @@ function getLocalDateKey(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
+// Парсить час оновлення з графіка (DD.MM.YYYY HH:mm) або екстрених (HH:mm DD.MM.YYYY) для порівняння порядку
+function parseUpdateTimestamp(str) {
+  if (!str || typeof str !== 'string') return null;
+  const s = str.trim();
+  // DD.MM.YYYY HH:mm
+  const dateFirst = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})$/);
+  if (dateFirst) {
+    const [, d, m, y, h, min] = dateFirst;
+    const date = new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(min), 0, 0);
+    return isNaN(date.getTime()) ? null : date.getTime();
+  }
+  // HH:mm DD.MM.YYYY
+  const timeFirst = s.match(/^(\d{1,2}):(\d{2})\s+(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (timeFirst) {
+    const [, h, min, d, m, y] = timeFirst;
+    const date = new Date(Number(y), Number(m) - 1, Number(d), Number(h), Number(min), 0, 0);
+    return isNaN(date.getTime()) ? null : date.getTime();
+  }
+  return null;
+}
+
 function formatDurationForReminder(totalMinutes) {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -70,7 +91,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageUpdateKey, outageStatus } = await scrapeSchedule();
+    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus } = await scrapeSchedule();
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -106,6 +127,7 @@ async function monitor() {
     const lastOutageMessage = lastState?.outageMessage || null;
     const lastOutageMessageBase = lastState?.outageMessageBase || null;
     const lastOutageSignature = lastState?.outageSignature || null;
+    const lastOutageEmergencyKey = lastState?.outageEmergencyKey || null;
     const lastOutageUpdateKey = lastState?.outageUpdateKey || null;
     const lastOutageStatus = lastState?.outageStatus || null;
     const lastEmergencyAlertSent = lastState?.lastEmergencyAlertSent === true;
@@ -308,15 +330,31 @@ async function monitor() {
     let didSendEmergencyAlert = false;
     let didSendCancelledAlert = false;
 
-    // Повідомлення про екстрене відключення — тільки при зміні (стабілізаційні не сламо)
-    if (outageMessage && outageUpdateKey) {
-      const normalizedCurrentBase = normalizeOutageBase(outageMessageBase || outageMessage);
-      const normalizedLastBase = normalizeOutageBase(lastOutageMessageBase || lastOutageMessage);
-      const signatureChanged = outageSignature && outageSignature !== lastOutageSignature;
-      const baseChanged = normalizedCurrentBase && normalizedCurrentBase !== normalizedLastBase;
-      if (signatureChanged || baseChanged) {
-        await sendTelegramMessage(outageMessage, isQuietHours, false);
-        didSendEmergencyAlert = true;
+    // Визначаємо, чи потрібно відправляти оновлення графіка та екстрені, і в якому порядку (за часом оновлення інфи)
+    const needEmergency = !!(outageMessage && outageEmergencyKey && outageEmergencyKey !== lastOutageEmergencyKey);
+    const needSchedule = comparison.changed || shouldSendMorningReport || shouldSendEveningReport;
+    let scheduleFirst = false;
+    if (needEmergency && needSchedule) {
+      const scheduleTime = parseUpdateTimestamp(factData.update);
+      const emergencyTime = parseUpdateTimestamp(outageUpdateKey);
+      if (scheduleTime != null && emergencyTime != null) {
+        scheduleFirst = scheduleTime <= emergencyTime;
+        console.log(`📅 Порядок оновлень: спочатку ${scheduleFirst ? 'графік' : 'екстрені'} (графік ${factData.update}, екстрені ${outageUpdateKey})`);
+      }
+    }
+    didSendEmergencyAlert = needEmergency;
+
+    // Та сама подія, змінився лише період — коротке повідомлення
+    const sameEmergencyPeriodChanged = outageMessage && outageEmergencyKey && outageEmergencyKey === lastOutageEmergencyKey &&
+      outageSignature && outageSignature !== lastOutageSignature && lastEmergencyAlertSent;
+    if (sameEmergencyPeriodChanged) {
+      const periodUpdateMessage = [
+        '🕐 Зміна періоду екстренних відключень:',
+        outagePeriodText ? `\n${outagePeriodText}` : '',
+        outageUpdateKey ? `\n📅 Оновлено: ${outageUpdateKey}` : '',
+      ].filter(Boolean).join('');
+      if (periodUpdateMessage.trim()) {
+        await sendTelegramMessage(periodUpdateMessage.trim(), isQuietHours, false);
       }
     }
 
@@ -330,12 +368,18 @@ async function monitor() {
 
     const nextEmergencyAlertSent = didSendEmergencyAlert || (!didSendCancelledAlert && outageStatus === 'active' && lastEmergencyAlertSent);
 
-    // Відправляємо повідомлення при змінах, планових звітах або нічних оновленнях
-    if (comparison.changed || shouldSendMorningReport || shouldSendEveningReport) {
-      let title;
-      
-    // Ранковий звіт о 8:00-9:00 - нагадування (тільки якщо давно не було змін)
-      if (shouldSendMorningReport) {
+    // Порядок відправки: за часом оновлення інфи (спочатку те, що оновилось раніше)
+    const firstSend = needSchedule && scheduleFirst ? 'schedule' : (needEmergency ? 'emergency' : null);
+    const secondSend = (needEmergency && scheduleFirst) ? 'emergency' : (needSchedule && !scheduleFirst ? 'schedule' : null);
+
+    for (const action of [firstSend, secondSend].filter(Boolean)) {
+      if (action === 'emergency') {
+        await sendTelegramMessage(outageMessage, isQuietHours, false);
+      }
+      if (action === 'schedule') {
+        let title;
+        // Ранковий звіт о 8:00-9:00 - нагадування (тільки якщо давно не було змін)
+        if (shouldSendMorningReport) {
         title = '🔌 Нагадування графіка на сьогодні';
       }
       // Вечірній звіт о 21:00 - завжди просто "Графік на завтра"
@@ -455,6 +499,7 @@ async function monitor() {
         outageMessage: outageMessage || null,
         outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
         outageSignature: outageSignature || null,
+        outageEmergencyKey: outageEmergencyKey || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         lastEmergencyAlertSent: nextEmergencyAlertSent,
@@ -476,7 +521,10 @@ async function monitor() {
       
       // Зберігаємо новий стан
       saveState(currentState);
-    } else {
+      }
+    }
+
+    if (!needSchedule) {
       console.log('✅ Змін не виявлено, повідомлення не відправляється');
       
       // Все одно оновлюємо timestamp стану
@@ -490,6 +538,7 @@ async function monitor() {
         outageMessage: outageMessage || null,
         outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
         outageSignature: outageSignature || null,
+        outageEmergencyKey: outageEmergencyKey || null,
         outageUpdateKey: outageUpdateKey || null,
         outageStatus: outageStatus || null,
         lastEmergencyAlertSent: nextEmergencyAlertSent,
