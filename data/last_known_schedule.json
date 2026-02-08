@@ -187,19 +187,23 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-08T02:48:32.984Z",
-  "outageMessage": "⚠️ Увага!\n\n⚡ Аварійні відключення.\n\nГрафіки стабілізаційних відключень не діють.\n\n🕐 Орієнтовний період: 15:02 07.02.2026 – 07:00 08.02.2026\n📅 Дата оновлення інформації – 04:37 08.02.2026",
-  "outageMessageBase": "Увага!\nАварійні відключення.\nГрафіки стабілізаційних відключень не діють.\nОрієнтовний період: 15:02 07.02.2026 – 07:00 08.02.2026",
-  "outageSignature": "{\"subType\":\"Екстренні відключення (Аварійне без застосування графіку погодинних відключень)\",\"startDate\":\"15:02 07.02.2026\",\"endDate\":\"07:00 08.02.2026\"}",
-  "outageEmergencyKey": "{\"subType\":\"Екстренні відключення (Аварійне без застосування графіку погодинних відключень)\",\"startDate\":\"15:02 07.02.2026\"}",
-  "outageUpdateKey": "04:37 08.02.2026",
-  "outageStatus": "active",
-  "lastEmergencyAlertSent": true,
+  "timestamp": "2026-02-08T05:06:30.299Z",
+  "outageMessage": null,
+  "outageMessageBase": null,
+  "outageSignature": null,
+  "outageEmergencyKey": null,
+  "outageUpdateKey": "06:52 08.02.2026",
+  "outageStatus": "cleared",
+  "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-07",
   "lastEveningReportDate": "2026-02-05",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-02-07T12:22:56.598Z",
   "lastTomorrowChangeTimestamp": "2026-02-07T21:00:59.083Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-02-08": [
+      "510-930"
+    ]
+  }
 }
