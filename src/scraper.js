@@ -151,43 +151,24 @@ async function findGroupForAddress(page, factData, csrfToken) {
     outageStatus = 'unknown';
   }
 
-  let outagePeriodText = null;
-
-  // Повідомлення в ТГ тільки для аварійних; стабілізаційні поки не відправляємо
+  // Повідомлення в ТГ тільки для аварійних; один раз сповіщаємо, далі ігноруємо оновлення до скасування
   if (searchResult.showCurOutageParam && hasSubType && isEmergency) {
-    const startDate = houseData.start_date || '';
-    const endDate = houseData.end_date || '';
-    const periodStr = [startDate, endDate].filter(Boolean).join(' – ');
-    outagePeriodText = periodStr || null;
     outageMessage = [
       '⚠️ Увага!',
       '',
-      '⚡ Аварійні відключення.',
+      '⚡ Аварійне відключення.',
       '',
       'Графіки стабілізаційних відключень не діють.',
-      '',
-      periodStr ? `🕐 Орієнтовний період: ${periodStr}` : null,
-      updateTimestamp ? `📅 Дата оновлення інформації – ${updateTimestamp}` : null,
-    ].filter((line) => line !== null).join('\n');
-    const updateLinePrefix = 'Дата оновлення інформації – ';
-    outageMessageBase = [
-      'Увага!',
-      'Аварійні відключення.',
-      'Графіки стабілізаційних відключень не діють.',
-      periodStr ? `Орієнтовний період: ${periodStr}` : null,
-    ].filter(Boolean).join('\n');
-    outageSignature = JSON.stringify({
-      subType,
-      startDate,
-      endDate
-    });
-    outageEmergencyKey = JSON.stringify({ subType, startDate });
+    ].join('\n');
+    outageMessageBase = 'Увага! Аварійне відключення. Графіки стабілізаційних відключень не діють.';
+    // Ключ без часу — один епізод аварійного = одне сповіщення, ігноруємо зміни періоду/пролонгації
+    outageEmergencyKey = JSON.stringify({ subType });
     console.log('⚠️  Виявлено аварійне відключення для адреси');
   } else if (hasSubType && isStabilization) {
     console.log('ℹ️  Стабілізаційне відключення (повідомлення в ТГ вимкнено)');
   }
 
-  return { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus };
+  return { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus };
 }
 
 // Основна функція скрапінгу
@@ -240,7 +221,7 @@ async function scrapeSchedule() {
     }
     
     // Шукаємо групу для адреси
-    const { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
+    const { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
     
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
@@ -279,7 +260,6 @@ async function scrapeSchedule() {
       outageMessageBase,
       outageSignature,
       outageEmergencyKey,
-      outagePeriodText,
       outageUpdateKey,
       outageStatus,
     };

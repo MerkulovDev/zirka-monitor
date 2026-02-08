@@ -91,7 +91,7 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outagePeriodText, outageUpdateKey, outageStatus } = await scrapeSchedule();
+    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus } = await scrapeSchedule();
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -343,20 +343,6 @@ async function monitor() {
       }
     }
     didSendEmergencyAlert = needEmergency;
-
-    // Та сама подія, змінився лише період — коротке повідомлення
-    const sameEmergencyPeriodChanged = outageMessage && outageEmergencyKey && outageEmergencyKey === lastOutageEmergencyKey &&
-      outageSignature && outageSignature !== lastOutageSignature && lastEmergencyAlertSent;
-    if (sameEmergencyPeriodChanged) {
-      const periodUpdateMessage = [
-        '🕐 Зміна періоду аварійних відключень:',
-        outagePeriodText ? `\n${outagePeriodText}` : '',
-        outageUpdateKey ? `\n📅 Оновлено: ${outageUpdateKey}` : '',
-      ].filter(Boolean).join('');
-      if (periodUpdateMessage.trim()) {
-        await sendTelegramMessage(periodUpdateMessage.trim(), isQuietHours, false);
-      }
-    }
 
     // Скасування аварійних — тільки якщо раніше ми справді надсилали повідомлення про аварійне
     const emergencyEnded = lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
