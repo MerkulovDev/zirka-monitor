@@ -1,5 +1,5 @@
 {
-  "update": "10.02.2026 20:42",
+  "update": "11.02.2026 10:45",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "no",
@@ -15,10 +15,10 @@
     "11": "no",
     "12": "no",
     "13": "no",
-    "14": "first",
-    "15": "yes",
-    "16": "yes",
-    "17": "yes",
+    "14": "no",
+    "15": "no",
+    "16": "no",
+    "17": "no",
     "18": "yes",
     "19": "yes",
     "20": "yes",
@@ -117,8 +117,26 @@
     {
       "hour": 14,
       "range": "13:00-14:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 13:00 до 13:30"
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 15,
+      "range": "14:00-15:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 16,
+      "range": "15:00-16:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 17,
+      "range": "16:00-17:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     },
     {
       "hour": 21,
@@ -145,27 +163,23 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-11T08:34:53.002Z",
+  "timestamp": "2026-02-11T09:34:42.523Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "10:27 11.02.2026",
+  "outageUpdateKey": "11:22 11.02.2026",
   "outageStatus": "stabilization",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-11",
   "lastEveningReportDate": "2026-02-05",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-02-08T16:17:22.967Z",
+  "lastTodayChangeTimestamp": "2026-02-11T09:34:42.523Z",
   "lastTomorrowChangeTimestamp": "2026-02-10T19:43:06.176Z",
   "remindersSent": {
     "2026-02-11": [
       "600"
     ]
   },
-  "nextOutageNotificationsSent": {
-    "2026-02-11": [
-      "600-810"
-    ]
-  }
+  "nextOutageNotificationsSent": {}
 }
