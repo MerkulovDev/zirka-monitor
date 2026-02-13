@@ -133,12 +133,12 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2026-02-13T04:56:08.038Z",
+  "timestamp": "2026-02-13T06:03:11.151Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "06:53 13.02.2026",
+  "outageUpdateKey": "07:56 13.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-12",
@@ -147,5 +147,9 @@
   "lastTodayChangeTimestamp": "2026-02-13T04:56:08.038Z",
   "lastTomorrowChangeTimestamp": "2026-02-12T19:37:42.765Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-02-13": [
+      "870-1290"
+    ]
+  }
 }
