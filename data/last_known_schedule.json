@@ -133,13 +133,13 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-14T12:22:18.071Z",
+  "timestamp": "2026-02-14T13:15:54.952Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "14:21 14.02.2026",
-  "outageStatus": "stabilization",
+  "outageUpdateKey": "15:08 14.02.2026",
+  "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-12",
   "lastEveningReportDate": "2026-02-05",
@@ -154,7 +154,8 @@
   },
   "nextOutageNotificationsSent": {
     "2026-02-14": [
-      "690-900"
+      "690-900",
+      "1320-1440"
     ]
   }
 }
