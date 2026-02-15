@@ -91,12 +91,12 @@
       "interpretation": "⚠️ Відключення з 22:00 до 22:30"
     }
   ],
-  "timestamp": "2026-02-15T06:00:27.175Z",
+  "timestamp": "2026-02-15T07:03:08.818Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "07:50 15.02.2026",
+  "outageUpdateKey": "08:48 15.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-15",
@@ -105,5 +105,9 @@
   "lastTodayChangeTimestamp": "2026-02-15T06:00:27.175Z",
   "lastTomorrowChangeTimestamp": "2026-02-14T18:18:38.501Z",
   "remindersSent": {},
-  "nextOutageNotificationsSent": {}
+  "nextOutageNotificationsSent": {
+    "2026-02-15": [
+      "1140-1350"
+    ]
+  }
 }
