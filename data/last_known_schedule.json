@@ -1,5 +1,5 @@
 {
-  "update": "16.02.2026 14:36",
+  "update": "16.02.2026 16:12",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -22,9 +22,9 @@
     "18": "no",
     "19": "no",
     "20": "first",
-    "21": "no",
-    "22": "no",
-    "23": "no",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
     "24": "yes"
   },
   "tomorrowSchedule": {
@@ -101,47 +101,25 @@
       "range": "19:00-20:00",
       "value": "first",
       "interpretation": "⚠️ Відключення з 19:00 до 19:30"
-    },
-    {
-      "hour": 21,
-      "range": "20:00-21:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 22,
-      "range": "21:00-22:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 23,
-      "range": "22:00-23:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-16T13:58:30.620Z",
+  "timestamp": "2026-02-16T14:39:04.747Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "15:50 16.02.2026",
-  "outageStatus": "cleared",
+  "outageUpdateKey": "16:38 16.02.2026",
+  "outageStatus": "stabilization",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-16",
   "lastEveningReportDate": "2026-02-05",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-02-16T12:54:21.086Z",
+  "lastTodayChangeTimestamp": "2026-02-16T14:39:04.747Z",
   "lastTomorrowChangeTimestamp": "2026-02-15T18:19:39.075Z",
   "remindersSent": {
     "2026-02-16": [
       "960"
     ]
   },
-  "nextOutageNotificationsSent": {
-    "2026-02-16": [
-      "960-1170"
-    ]
-  }
+  "nextOutageNotificationsSent": {}
 }
