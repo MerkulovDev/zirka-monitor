@@ -103,12 +103,12 @@
       "interpretation": "⚠️ Відключення з 19:00 до 19:30"
     }
   ],
-  "timestamp": "2026-02-16T21:00:43.007Z",
+  "timestamp": "2026-02-16T21:42:36.012Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "22:49 16.02.2026",
+  "outageUpdateKey": "23:37 16.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-16",
