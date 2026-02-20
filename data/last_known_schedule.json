@@ -145,13 +145,13 @@
       "interpretation": "⚠️ Відключення з 21:00 до 21:30"
     }
   ],
-  "timestamp": "2026-02-20T19:04:42.683Z",
+  "timestamp": "2026-02-20T19:46:42.860Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "20:56 20.02.2026",
-  "outageStatus": "stabilization",
+  "outageUpdateKey": "21:33 20.02.2026",
+  "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-19",
   "lastEveningReportDate": "2026-02-19",
