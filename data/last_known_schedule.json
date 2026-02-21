@@ -1,5 +1,5 @@
 {
-  "update": "21.02.2026 11:15",
+  "update": "21.02.2026 11:24",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -17,10 +17,10 @@
     "13": "no",
     "14": "no",
     "15": "no",
-    "16": "no",
-    "17": "no",
-    "18": "no",
-    "19": "first",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
+    "19": "yes",
     "20": "yes",
     "21": "yes",
     "22": "yes",
@@ -103,30 +103,6 @@
       "interpretation": "❌ Відключення весь проміжок"
     },
     {
-      "hour": 16,
-      "range": "15:00-16:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 17,
-      "range": "16:00-17:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 18,
-      "range": "17:00-18:00",
-      "value": "no",
-      "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 19,
-      "range": "18:00-19:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 18:00 до 18:30"
-    },
-    {
       "hour": 23,
       "range": "22:00-23:00",
       "value": "no",
@@ -139,18 +115,18 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-21T09:19:52.850Z",
+  "timestamp": "2026-02-21T09:50:32.563Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "11:04 21.02.2026",
+  "outageUpdateKey": "11:35 21.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-21",
   "lastEveningReportDate": "2026-02-19",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-02-18T07:33:54.969Z",
+  "lastTodayChangeTimestamp": "2026-02-21T09:50:32.563Z",
   "lastTomorrowChangeTimestamp": "2026-02-20T18:06:57.120Z",
   "remindersSent": {
     "2026-02-21": [
@@ -158,9 +134,5 @@
       "690"
     ]
   },
-  "nextOutageNotificationsSent": {
-    "2026-02-21": [
-      "690-1110"
-    ]
-  }
+  "nextOutageNotificationsSent": {}
 }
