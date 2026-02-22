@@ -115,12 +115,12 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-02-22T22:47:41.716Z",
+  "timestamp": "2026-02-22T23:53:54.313Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "00:34 23.02.2026",
+  "outageUpdateKey": "01:48 23.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-22",
