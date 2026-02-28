@@ -1,5 +1,5 @@
 {
-  "update": "28.02.2026 18:57",
+  "update": "28.02.2026 19:53",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -36,10 +36,10 @@
     "6": "yes",
     "7": "yes",
     "8": "yes",
-    "9": "yes",
-    "10": "yes",
-    "11": "yes",
-    "12": "yes",
+    "9": "second",
+    "10": "no",
+    "11": "no",
+    "12": "no",
     "13": "yes",
     "14": "yes",
     "15": "yes",
@@ -79,19 +79,19 @@
       "interpretation": "⚠️ Відключення з 04:00 до 04:30"
     }
   ],
-  "timestamp": "2026-02-28T17:51:50.357Z",
+  "timestamp": "2026-02-28T18:17:04.991Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "19:47 28.02.2026",
+  "outageUpdateKey": "20:07 28.02.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-27",
   "lastEveningReportDate": "2026-02-27",
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-02-28T05:56:44.030Z",
-  "lastTomorrowChangeTimestamp": "2026-02-27T19:07:24.198Z",
+  "lastTomorrowChangeTimestamp": "2026-02-28T18:17:04.991Z",
   "remindersSent": {
     "2026-02-28": [
       "60"
