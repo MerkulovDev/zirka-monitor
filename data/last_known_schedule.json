@@ -3,32 +3,6 @@
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
-    "2": "no",
-    "3": "no",
-    "4": "no",
-    "5": "first",
-    "6": "yes",
-    "7": "yes",
-    "8": "yes",
-    "9": "yes",
-    "10": "yes",
-    "11": "yes",
-    "12": "yes",
-    "13": "yes",
-    "14": "yes",
-    "15": "yes",
-    "16": "yes",
-    "17": "yes",
-    "18": "yes",
-    "19": "yes",
-    "20": "yes",
-    "21": "yes",
-    "22": "yes",
-    "23": "yes",
-    "24": "yes"
-  },
-  "tomorrowSchedule": {
-    "1": "yes",
     "2": "yes",
     "3": "yes",
     "4": "yes",
@@ -53,38 +27,64 @@
     "23": "yes",
     "24": "yes"
   },
+  "tomorrowSchedule": {
+    "1": "yes",
+    "2": "yes",
+    "3": "yes",
+    "4": "yes",
+    "5": "yes",
+    "6": "yes",
+    "7": "yes",
+    "8": "yes",
+    "9": "yes",
+    "10": "yes",
+    "11": "yes",
+    "12": "yes",
+    "13": "yes",
+    "14": "yes",
+    "15": "yes",
+    "16": "yes",
+    "17": "yes",
+    "18": "yes",
+    "19": "yes",
+    "20": "yes",
+    "21": "yes",
+    "22": "yes",
+    "23": "yes",
+    "24": "yes"
+  },
   "schedule": [
     {
-      "hour": 2,
-      "range": "01:00-02:00",
+      "hour": 9,
+      "range": "08:00-09:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 08:30 до 09:00"
+    },
+    {
+      "hour": 10,
+      "range": "09:00-10:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
     },
     {
-      "hour": 3,
-      "range": "02:00-03:00",
+      "hour": 11,
+      "range": "10:00-11:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
     },
     {
-      "hour": 4,
-      "range": "03:00-04:00",
+      "hour": 12,
+      "range": "11:00-12:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
-    },
-    {
-      "hour": 5,
-      "range": "04:00-05:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 04:00 до 04:30"
     }
   ],
-  "timestamp": "2026-02-28T21:50:53.502Z",
+  "timestamp": "2026-02-28T22:12:16.293Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "23:49 28.02.2026",
+  "outageUpdateKey": "00:04 01.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-02-27",
@@ -92,10 +92,6 @@
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-02-28T05:56:44.030Z",
   "lastTomorrowChangeTimestamp": "2026-02-28T18:17:04.991Z",
-  "remindersSent": {
-    "2026-02-28": [
-      "60"
-    ]
-  },
+  "remindersSent": {},
   "nextOutageNotificationsSent": {}
 }
