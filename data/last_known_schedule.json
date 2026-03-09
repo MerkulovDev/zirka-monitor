@@ -54,12 +54,12 @@
     "24": "yes"
   },
   "schedule": [],
-  "timestamp": "2026-03-09T21:52:12.862Z",
+  "timestamp": "2026-03-09T22:17:15.845Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "23:49 09.03.2026",
+  "outageUpdateKey": "00:03 10.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-09",
@@ -67,10 +67,6 @@
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-03-09T16:37:46.992Z",
   "lastTomorrowChangeTimestamp": "2026-03-08T16:46:02.734Z",
-  "remindersSent": {
-    "2026-03-09": [
-      "1080"
-    ]
-  },
+  "remindersSent": {},
   "nextOutageNotificationsSent": {}
 }
