@@ -67,12 +67,12 @@
       "interpretation": "⚠️ Відключення з 19:00 до 19:30"
     }
   ],
-  "timestamp": "2026-03-09T14:40:55.421Z",
+  "timestamp": "2026-03-09T15:38:45.595Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "16:36 09.03.2026",
+  "outageUpdateKey": "17:35 09.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-09",
@@ -80,6 +80,10 @@
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-03-09T14:40:55.421Z",
   "lastTomorrowChangeTimestamp": "2026-03-08T16:46:02.734Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2026-03-09": [
+      "1080"
+    ]
+  },
   "nextOutageNotificationsSent": {}
 }
