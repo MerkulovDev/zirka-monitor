@@ -1,5 +1,5 @@
 {
-  "update": "10.03.2026 17:12",
+  "update": "10.03.2026 19:06",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -61,12 +61,12 @@
       "interpretation": "⚠️ Відключення з 13:00 до 13:30"
     }
   ],
-  "timestamp": "2026-03-10T16:38:08.868Z",
+  "timestamp": "2026-03-10T17:28:37.206Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "18:35 10.03.2026",
+  "outageUpdateKey": "19:20 10.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-10",
