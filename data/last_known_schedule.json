@@ -1,5 +1,5 @@
 {
-  "update": "18.03.2026 13:37",
+  "update": "18.03.2026 14:55",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -54,12 +54,12 @@
     "24": "yes"
   },
   "schedule": [],
-  "timestamp": "2026-03-18T12:04:56.967Z",
+  "timestamp": "2026-03-18T13:51:33.640Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "14:02 18.03.2026",
+  "outageUpdateKey": "15:50 18.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-18",
