@@ -1,5 +1,5 @@
 {
-  "update": "13.03.2026 16:27",
+  "update": "18.03.2026 11:18",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -14,18 +14,18 @@
     "10": "yes",
     "11": "yes",
     "12": "yes",
-    "13": "yes",
-    "14": "yes",
+    "13": "no",
+    "14": "no",
     "15": "yes",
     "16": "yes",
     "17": "yes",
     "18": "yes",
     "19": "yes",
     "20": "yes",
-    "21": "yes",
-    "22": "yes",
-    "23": "yes",
-    "24": "yes"
+    "21": "second",
+    "22": "no",
+    "23": "no",
+    "24": "no"
   },
   "tomorrowSchedule": {
     "1": "yes",
@@ -53,20 +53,61 @@
     "23": "yes",
     "24": "yes"
   },
-  "schedule": [],
-  "timestamp": "2026-03-18T08:35:11.516Z",
+  "schedule": [
+    {
+      "hour": 13,
+      "range": "12:00-13:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 14,
+      "range": "13:00-14:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 21,
+      "range": "20:00-21:00",
+      "value": "second",
+      "interpretation": "⚠️ Відключення з 20:30 до 21:00"
+    },
+    {
+      "hour": 22,
+      "range": "21:00-22:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 23,
+      "range": "22:00-23:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 24,
+      "range": "23:00-24:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
+    }
+  ],
+  "timestamp": "2026-03-18T09:34:57.071Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "10:33 18.03.2026",
+  "outageUpdateKey": "11:33 18.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-18",
   "lastEveningReportDate": "2026-03-15",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-03-14T07:37:50.021Z",
+  "lastTodayChangeTimestamp": "2026-03-18T09:34:57.071Z",
   "lastTomorrowChangeTimestamp": "2026-03-10T18:06:52.147Z",
-  "remindersSent": {},
+  "remindersSent": {
+    "2026-03-18": [
+      "720"
+    ]
+  },
   "nextOutageNotificationsSent": {}
 }
