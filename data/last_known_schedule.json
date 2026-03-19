@@ -73,12 +73,12 @@
       "interpretation": "⚠️ Відключення з 10:00 до 10:30"
     }
   ],
-  "timestamp": "2026-03-18T23:33:47.513Z",
+  "timestamp": "2026-03-19T02:33:57.091Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "01:33 19.03.2026",
+  "outageUpdateKey": "04:33 19.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-18",
