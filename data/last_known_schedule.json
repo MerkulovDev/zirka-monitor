@@ -18,7 +18,7 @@
     "14": "yes",
     "15": "yes",
     "16": "yes",
-    "17": "first",
+    "17": "yes",
     "18": "yes",
     "19": "yes",
     "20": "yes",
@@ -53,20 +53,13 @@
     "23": "yes",
     "24": "yes"
   },
-  "schedule": [
-    {
-      "hour": 17,
-      "range": "16:00-17:00",
-      "value": "first",
-      "interpretation": "⚠️ Відключення з 16:00 до 16:30"
-    }
-  ],
-  "timestamp": "2026-03-24T21:59:43.823Z",
+  "schedule": [],
+  "timestamp": "2026-03-24T22:30:53.208Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "23:49 24.03.2026",
+  "outageUpdateKey": "00:19 25.03.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-24",
@@ -74,10 +67,6 @@
   "lastNightUpdateDate": null,
   "lastTodayChangeTimestamp": "2026-03-23T23:36:15.797Z",
   "lastTomorrowChangeTimestamp": "2026-03-18T18:09:24.306Z",
-  "remindersSent": {
-    "2026-03-24": [
-      "960"
-    ]
-  },
+  "remindersSent": {},
   "nextOutageNotificationsSent": {}
 }
