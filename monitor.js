@@ -347,7 +347,14 @@ async function monitor() {
     // Скасування аварійних — тільки якщо раніше ми справді надсилали повідомлення про аварійне
     const emergencyEnded = lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
     if (emergencyEnded) {
-      const clearedMessage = 'ℹ️ Аварійне відключення скасовано — далі діють графіки погодинних відключень.';
+      let clearedMessage;
+      if (lastOutageStatus === 'repair') {
+        clearedMessage = 'ℹ️ Аварійні ремонтні роботи завершено — далі діють графіки погодинних відключень.';
+      } else if (lastOutageStatus === 'unknown') {
+        clearedMessage = 'ℹ️ Позапланове відключення скасовано — далі діють графіки погодинних відключень.';
+      } else {
+        clearedMessage = 'ℹ️ Аварійне відключення скасовано — далі діють графіки погодинних відключень.';
+      }
       await sendTelegramMessage(clearedMessage, isQuietHours, false);
       didSendCancelledAlert = true;
     }

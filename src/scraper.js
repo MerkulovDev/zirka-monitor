@@ -134,6 +134,7 @@ async function findGroupForAddress(page, factData, csrfToken) {
   const normalizedSubType = subType.toLowerCase();
   const isEmergency = normalizedSubType.includes('екстрен') && normalizedSubType.includes('відключ');
   const isStabilization = normalizedSubType.includes('стабілізаційне відключення');
+  const isRepair = normalizedSubType.includes('аварійн') && normalizedSubType.includes('ремонт');
 
   const outageUpdateKey = updateTimestamp || null;
   let outageMessage = null;
@@ -147,6 +148,8 @@ async function findGroupForAddress(page, factData, csrfToken) {
     outageStatus = 'active';
   } else if (isStabilization) {
     outageStatus = 'stabilization';
+  } else if (isRepair) {
+    outageStatus = 'repair';
   } else {
     outageStatus = 'unknown';
   }
@@ -166,6 +169,21 @@ async function findGroupForAddress(page, factData, csrfToken) {
     console.log('⚠️  Виявлено аварійне відключення для адреси');
   } else if (hasSubType && isStabilization) {
     console.log('ℹ️  Стабілізаційне відключення (повідомлення в ТГ вимкнено)');
+  } else if (hasSubType && (isRepair || outageStatus === 'unknown')) {
+    const startDate = houseData.start_date || null;
+    const endDate = houseData.end_date || null;
+    const timeStr = (startDate && endDate) ? ` (${startDate} – ${endDate})` : '';
+    outageMessage = [
+      '⚠️ Увага!',
+      '',
+      `🔧 ${subType}${timeStr}.`,
+      '',
+      'Графіки стабілізаційних відключень можуть не діяти.',
+    ].join('\n');
+    outageMessageBase = `${subType}${timeStr}.`;
+    // Ключ включає startDate — нове повідомлення якщо роботи продовжили (нова дата початку)
+    outageEmergencyKey = JSON.stringify({ subType, startDate });
+    console.log(`⚠️  Виявлено: ${subType}${timeStr}`);
   }
 
   return { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus };
