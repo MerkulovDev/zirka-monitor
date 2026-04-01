@@ -226,17 +226,29 @@ async function scrapeSchedule() {
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
     if (dayKeys.length === 0) {
-      throw new Error('Графіки не знайдено в factData.data');
+      console.log('ℹ️  factData.data порожній — відключень не заплановано');
+      await browser.close();
+      return {
+        factData,
+        group,
+        groupSchedule: {},
+        tomorrowSchedule: null,
+        outageMessage,
+        outageMessageBase,
+        outageSignature,
+        outageEmergencyKey,
+        outageUpdateKey,
+        outageStatus,
+      };
     }
     
     const todayKey = dayKeys[0];
     const tomorrowKey = dayKeys.length > 1 ? dayKeys[1] : null;
     
-    if (!factData.data[todayKey] || !factData.data[todayKey][group]) {
-      throw new Error(`Графік для групи ${group} не знайдено`);
-    }
-    
-    const groupSchedule = factData.data[todayKey][group];
+    // Якщо групу не знайдено в даних на сьогодні — порожній розклад (відключень немає)
+    const groupSchedule = (factData.data[todayKey] && factData.data[todayKey][group])
+      ? factData.data[todayKey][group]
+      : {};
     
     // Отримуємо графік на завтра, якщо він є
     let tomorrowSchedule = null;
