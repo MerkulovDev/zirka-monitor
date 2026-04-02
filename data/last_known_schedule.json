@@ -9,7 +9,7 @@
     "5": "yes",
     "6": "yes",
     "7": "yes",
-    "8": "yes",
+    "8": "first",
     "9": "yes",
     "10": "yes",
     "11": "yes",
@@ -35,7 +35,7 @@
     "5": "yes",
     "6": "yes",
     "7": "yes",
-    "8": "first",
+    "8": "yes",
     "9": "yes",
     "10": "yes",
     "11": "yes",
@@ -53,13 +53,20 @@
     "23": "yes",
     "24": "yes"
   },
-  "schedule": [],
-  "timestamp": "2026-04-02T20:42:33.482Z",
+  "schedule": [
+    {
+      "hour": 8,
+      "range": "07:00-08:00",
+      "value": "first",
+      "interpretation": "⚠️ Відключення з 07:00 до 07:30"
+    }
+  ],
+  "timestamp": "2026-04-02T21:45:58.441Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "23:35 02.04.2026",
+  "outageUpdateKey": "00:33 03.04.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-30",
