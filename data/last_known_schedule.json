@@ -85,12 +85,12 @@
       "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-04-03T17:40:39.217Z",
+  "timestamp": "2026-04-03T18:57:35.636Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "20:35 03.04.2026",
+  "outageUpdateKey": "21:49 03.04.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-03-30",
