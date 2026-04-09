@@ -1,5 +1,5 @@
 {
-  "update": "09.04.2026 10:37",
+  "update": "09.04.2026 11:53",
   "group": "GPV6.2",
   "fullSchedule": {
     "1": "yes",
@@ -23,7 +23,7 @@
     "19": "no",
     "20": "no",
     "21": "no",
-    "22": "yes",
+    "22": "no",
     "23": "yes",
     "24": "yes"
   },
@@ -77,20 +77,26 @@
       "range": "20:00-21:00",
       "value": "no",
       "interpretation": "❌ Відключення весь проміжок"
+    },
+    {
+      "hour": 22,
+      "range": "21:00-22:00",
+      "value": "no",
+      "interpretation": "❌ Відключення весь проміжок"
     }
   ],
-  "timestamp": "2026-04-09T07:46:40.713Z",
-  "outageMessage": null,
-  "outageMessageBase": null,
+  "timestamp": "2026-04-09T09:02:05.703Z",
+  "outageMessage": "⚠️ Увага!\n\n🔧 Аварійні ремонтні роботи (10:01 09.04.2026 – 15:07 09.04.2026).\n\nГрафіки стабілізаційних відключень можуть не діяти.",
+  "outageMessageBase": "Аварійні ремонтні роботи (10:01 09.04.2026 – 15:07 09.04.2026).",
   "outageSignature": null,
-  "outageEmergencyKey": null,
-  "outageUpdateKey": "10:34 09.04.2026",
-  "outageStatus": "cleared",
-  "lastEmergencyAlertSent": false,
+  "outageEmergencyKey": "{\"subType\":\"Аварійні ремонтні роботи\",\"startDate\":\"10:01 09.04.2026\"}",
+  "outageUpdateKey": "11:51 09.04.2026",
+  "outageStatus": "repair",
+  "lastEmergencyAlertSent": true,
   "lastMorningReportDate": "2026-04-09",
   "lastEveningReportDate": "2026-04-08",
   "lastNightUpdateDate": null,
-  "lastTodayChangeTimestamp": "2026-04-09T07:46:40.713Z",
+  "lastTodayChangeTimestamp": "2026-04-09T09:02:05.703Z",
   "lastTomorrowChangeTimestamp": "2026-03-18T18:09:24.306Z",
   "remindersSent": {},
   "nextOutageNotificationsSent": {}
