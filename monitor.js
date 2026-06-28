@@ -97,7 +97,11 @@ async function monitor() {
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
     console.log(`📊 Знайдено ${schedule.length} періодів відключення`);
     const mergedTodayIntervals = mergeDisconnectionPeriods(schedule);
-    
+    const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule).schedule : null;
+    const mergedTomorrowIntervals = processedTomorrowSchedule ? mergeDisconnectionPeriods(processedTomorrowSchedule) : [];
+    const todayHasOutages = mergedTodayIntervals.length > 0;
+    const tomorrowHasOutages = mergedTomorrowIntervals.length > 0;
+
     // Визначаємо поточний час
     const now = new Date();
     const hour = now.getHours();
@@ -140,9 +144,32 @@ async function monitor() {
       ? (now.getTime() - new Date(lastTodayChangeTimestamp).getTime()) / (1000 * 60 * 60)
       : 999; // Якщо не було змін - вважаємо що давно
     
-    const hoursSinceLastTomorrowChange = lastTomorrowChangeTimestamp 
+    const hoursSinceLastTomorrowChange = lastTomorrowChangeTimestamp
       ? (now.getTime() - new Date(lastTomorrowChangeTimestamp).getTime()) / (1000 * 60 * 60)
       : 999; // Якщо не було змін - вважаємо що давно
+
+    // Історія "чи були відключення" по днях. Використовуємо щоб не спамити щоденними
+    // нагадуваннями: якщо штиль тримається 2 дні поспіль і на наступний період теж порожньо —
+    // замовкаємо (показуємо "Відключень не заплановано" лише на переході в штиль).
+    const outageHistoryRaw = (lastState && lastState.outageHistory && typeof lastState.outageHistory === 'object' && !Array.isArray(lastState.outageHistory))
+      ? { ...lastState.outageHistory }
+      : {};
+    const dayKnownEmpty = (offset) => {
+      if (offset === 0) return !todayHasOutages;
+      const d = new Date(now);
+      d.setDate(d.getDate() + offset);
+      return outageHistoryRaw[getLocalDateKey(d)] === false; // тільки якщо точно знаємо що було порожньо
+    };
+    // Ранкове (про сьогодні): попередні 2 дні = вчора + позавчора
+    const suppressMorningReminder = !todayHasOutages && dayKnownEmpty(-1) && dayKnownEmpty(-2);
+    // Вечірнє (про завтра): попередні 2 дні = сьогодні + вчора.
+    // Якщо графік на завтра ще недоступний — теж мовчимо (нічого корисного сказати).
+    const suppressEveningReminder = (tomorrowSchedule == null) || (!tomorrowHasOutages && dayKnownEmpty(0) && dayKnownEmpty(-1));
+
+    // Записуємо статус сьогодні в історію (sticky-true протягом дня) і обрізаємо до 10 днів
+    outageHistoryRaw[todayKey] = (outageHistoryRaw[todayKey] === true) || todayHasOutages;
+    const updatedOutageHistory = {};
+    Object.keys(outageHistoryRaw).sort().slice(-10).forEach((k) => { updatedOutageHistory[k] = outageHistoryRaw[k]; });
 
     // Ранковий звіт о 8:00-9:00 про графік на сьогодні
     // Відправляємо ТІЛЬКИ якщо:
@@ -158,6 +185,8 @@ async function monitor() {
         // Не встановлюємо shouldSendMorningReport, бо відправимо оновлення
       } else if (hoursSinceLastTodayChange < 5) {
         console.log(`☀️ Ранок: останні зміни на сьогодні були ${hoursSinceLastTodayChange.toFixed(1)} год тому (<5), ранкове нагадування не потрібне.`);
+      } else if (suppressMorningReminder) {
+        console.log('☀️ Ранок: штиль 2+ дні поспіль і сьогодні без відключень — нагадування не шлемо (зайвий спам).');
       } else {
         shouldSendMorningReport = true;
         console.log(`☀️ Ранок: останні зміни на сьогодні ${hoursSinceLastTodayChange.toFixed(1)} год тому (>5), відправимо ранкове нагадування.`);
@@ -179,6 +208,8 @@ async function monitor() {
         shouldSendEveningReport = false;
       } else if (hoursSinceLastTomorrowChange < 5) {
         console.log(`🌆 Вечір: останні зміни на завтра були ${hoursSinceLastTomorrowChange.toFixed(1)} год тому (<5), вечірнє нагадування не потрібне.`);
+      } else if (suppressEveningReminder) {
+        console.log('🌆 Вечір: графік на завтра недоступний або штиль 2+ дні без відключень — нагадування не шлемо (зайвий спам).');
       } else {
         // Тільки якщо змін на завтра немає І давно не було - відправляємо щоденне нагадування
         shouldSendEveningReport = true;
@@ -413,7 +444,6 @@ async function monitor() {
       const scheduleSections = [];
       let addedToday = false;
       let addedTomorrow = false;
-      const processedTomorrowSchedule = tomorrowSchedule ? processSchedule(tomorrowSchedule).schedule : null;
 
       const pushTodaySection = () => {
         if (!addedToday) {
@@ -424,10 +454,10 @@ async function monitor() {
 
       const pushTomorrowSection = () => {
         if (!addedTomorrow) {
+          // Якщо графік на завтра недоступний — секцію не додаємо (раніше тут був note,
+          // який лише спамив "Графік на завтра поки недоступний").
           if (tomorrowSchedule) {
             scheduleSections.push({ label: 'завтра', scheduleData: processedTomorrowSchedule || [] });
-          } else {
-            scheduleSections.push({ label: 'завтра', scheduleData: [], note: 'ℹ️ Графік на завтра поки недоступний.' });
           }
           addedTomorrow = true;
         }
@@ -509,7 +539,8 @@ async function monitor() {
         lastTomorrowChangeTimestamp: comparison.tomorrowChanged ? new Date().toISOString() : (lastState?.lastTomorrowChangeTimestamp || null),
         remindersSent: updatedRemindersSentMap,
         // При змінах графіку очищаємо історію повідомлень про наступні відключення (бо періоди могли змінитись)
-        nextOutageNotificationsSent: comparison.scheduleChanged ? {} : updatedNextOutageMap
+        nextOutageNotificationsSent: comparison.scheduleChanged ? {} : updatedNextOutageMap,
+        outageHistory: updatedOutageHistory
       };
       
       // Зберігаємо новий стан
@@ -541,7 +572,8 @@ async function monitor() {
         lastTodayChangeTimestamp: lastState?.lastTodayChangeTimestamp || null,
         lastTomorrowChangeTimestamp: lastState?.lastTomorrowChangeTimestamp || null,
         remindersSent: updatedRemindersSentMap,
-        nextOutageNotificationsSent: updatedNextOutageMap
+        nextOutageNotificationsSent: updatedNextOutageMap,
+        outageHistory: updatedOutageHistory
       };
       saveState(currentState);
     }
