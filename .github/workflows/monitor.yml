@@ -8,34 +8,36 @@ on:
     - cron: '*/20 8-22 * * *'
   workflow_dispatch: # Можна запустити вручну
 
+# GitHub часто дропає заплановані запуски, тому кожен job сам крутить internal-loop
+# (перевірка кожні 20 хв протягом ~40 хв). concurrency не дає запускам накладатись:
+# новий "kick" стає в чергу і підхоплює одразу після завершення попереднього.
+concurrency:
+  group: monitor-prod
+  cancel-in-progress: false
+
 jobs:
   monitor-prod:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write
-    
+
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          access_token: ${{ github.token }}
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Create data directory
         run: mkdir -p data
-      
-      - name: Run monitor PROD script
+
+      - name: Run monitor loop (3 checks × 20 min)
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -44,24 +46,31 @@ jobs:
           ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
           ADDRESS_HOUSE: ${{ secrets.ADDRESS_HOUSE }}
           TZ: Europe/Kyiv
-        run: node monitor.js
-      
-      - name: Commit and push state file
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
-          # Завжди комітимо файл стану, якщо він змінився
-          if [ -f data/last_known_schedule.json ]; then
-            git add data/last_known_schedule.json
-            if [ -n "$(git status --porcelain data/)" ]; then
-              git commit -m "📊 Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-              git push || echo "Nothing to push"
-            else
-              echo "State file unchanged"
-            fi
-          else
-            echo "State file not found"
-          fi
 
+          run_and_push() {
+            node monitor.js || echo "⚠️ monitor.js завершився з помилкою"
+            if [ -f data/last_known_schedule.json ]; then
+              git add data/last_known_schedule.json
+              if [ -n "$(git status --porcelain data/)" ]; then
+                git commit -m "📊 Monitor state $(date -u +'%Y-%m-%d %H:%M:%S')" || true
+                git pull --rebase origin main || git rebase --abort || true
+                git push || echo "⚠️ push не пройшов (повторимо на наступній ітерації)"
+              else
+                echo "Стан не змінився — коміт не потрібен"
+              fi
+            else
+              echo "Файл стану не знайдено"
+            fi
+          }
+
+          for i in 1 2 3; do
+            echo "▶️ Перевірка $i/3 ($(date -u +'%H:%M:%S') UTC)"
+            run_and_push
+            if [ "$i" -lt 3 ]; then
+              echo "⏳ Чекаємо 20 хв до наступної перевірки..."
+              sleep 1200
+            fi
+          done
