@@ -58,7 +58,7 @@ async function waitForFactData(page, maxRetries = 15) {
 async function findGroupForAddress(page, factData, csrfToken) {
   console.log('🔍 Шукаємо групу для адреси...');
   
-  const searchResult = await page.evaluate(async (city, street, update, csrf) => {
+  let searchResult = await page.evaluate(async (city, street, update, csrf) => {
     const ajaxUrl = document.querySelector('meta[name="ajaxUrl"]')?.getAttribute('content') || '/ua/ajax';
     const fullUrl = ajaxUrl.startsWith('http') ? ajaxUrl : `${window.location.origin}${ajaxUrl}`;
     
@@ -83,24 +83,31 @@ async function findGroupForAddress(page, factData, csrfToken) {
         },
         body: params.toString()
       });
-      
-      return await response.json();
+
+      const status = response.status;
+      const text = await response.text();
+      let json = null;
+      try { json = JSON.parse(text); } catch (e) { /* не JSON — challenge/HTML */ }
+      return { status, json, rawSnippet: json ? null : text.slice(0, 300) };
     } catch (error) {
       return { error: error.message };
     }
   }, CONFIG.ADDRESS_CITY, CONFIG.ADDRESS_STREET, factData.update, csrfToken);
-  
+
+  // Ендпоінт буває зламаний на боці сервера (500) — це не фатально,
+  // monitor може продовжити зі збереженою групою. Повертаємо null замість throw.
   if (searchResult.error) {
-    throw new Error('Помилка пошуку адреси: ' + searchResult.error);
+    console.error('⚠️ Пошук адреси: мережева помилка:', searchResult.error);
+    return null;
   }
-  
-  // Діагностика: виводимо що отримали від сервера
-  if (!searchResult.result || !searchResult.data) {
-    console.error('❌ Неочікуваний формат відповіді від сервера');
-    console.error('Відповідь сервера:', JSON.stringify(searchResult, null, 2));
-    throw new Error('Неочікуваний формат відповіді від сервера');
+  if (searchResult.status >= 400 || !searchResult.json || !searchResult.json.result || !searchResult.json.data) {
+    console.error(`⚠️ Пошук адреси недоступний (HTTP ${searchResult.status})`);
+    console.error('Відповідь сервера:', JSON.stringify(searchResult.json || searchResult.rawSnippet, null, 2));
+    return null;
   }
-  
+
+  searchResult = searchResult.json;
+
   // Шукаємо будинок
   const houseKey = CONFIG.ADDRESS_HOUSE.toUpperCase();
   const houseKeyAlt1 = houseKey.replace('А', '-А');
@@ -190,7 +197,9 @@ async function findGroupForAddress(page, factData, csrfToken) {
 }
 
 // Основна функція скрапінгу
-async function scrapeSchedule() {
+// fallbackGroup — збережена група з попереднього стану; використовується коли
+// пошук адреси на сайті зламаний (сервер віддає 500), щоб моніторинг не зупинявся
+async function scrapeSchedule({ fallbackGroup = null } = {}) {
   let browser;
   
   try {
@@ -239,8 +248,25 @@ async function scrapeSchedule() {
     }
     
     // Шукаємо групу для адреси
-    const { group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus } = await findGroupForAddress(page, factData, csrfToken);
-    
+    const lookup = await findGroupForAddress(page, factData, csrfToken);
+    let group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus;
+    let groupLookupFailed = false;
+    if (lookup) {
+      ({ group, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus } = lookup);
+    } else if (fallbackGroup) {
+      console.log(`♻️ Пошук адреси недоступний — використовуємо збережену групу: ${fallbackGroup}`);
+      group = fallbackGroup;
+      outageMessage = null;
+      outageMessageBase = null;
+      outageSignature = null;
+      outageEmergencyKey = null;
+      outageUpdateKey = null;
+      outageStatus = null;
+      groupLookupFailed = true;
+    } else {
+      throw new Error('Пошук адреси недоступний (сервер віддає помилку) і збереженої групи немає');
+    }
+
     // Витягуємо графік для групи (сьогодні та завтра)
     const dayKeys = Object.keys(factData.data || {}).sort();
     if (dayKeys.length === 0) {
@@ -257,6 +283,7 @@ async function scrapeSchedule() {
         outageEmergencyKey,
         outageUpdateKey,
         outageStatus,
+        groupLookupFailed,
       };
     }
     
@@ -280,7 +307,7 @@ async function scrapeSchedule() {
     }
     
     await browser.close();
-    
+
     return {
       factData,
       group,
@@ -292,6 +319,7 @@ async function scrapeSchedule() {
       outageEmergencyKey,
       outageUpdateKey,
       outageStatus,
+      groupLookupFailed,
     };
     
   } catch (error) {

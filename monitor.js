@@ -91,7 +91,10 @@ async function monitor() {
     console.log(`📍 Адреса: ${CONFIG.ADDRESS_CITY}, ${CONFIG.ADDRESS_STREET}, ${CONFIG.ADDRESS_HOUSE}\n`);
 
     // Скрапінг даних
-    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus } = await scrapeSchedule();
+    // Стан читаємо ДО скрапінгу: якщо пошук адреси на сайті зламаний (500),
+    // scrapeSchedule продовжить роботу зі збереженою групою
+    const lastState = getLastKnownState();
+    const { factData, group, groupSchedule, tomorrowSchedule, outageMessage, outageMessageBase, outageSignature, outageEmergencyKey, outageUpdateKey, outageStatus, groupLookupFailed } = await scrapeSchedule({ fallbackGroup: lastState?.group || null });
     
     // Обробка графіку
     const { fullSchedule, schedule } = processSchedule(groupSchedule);
@@ -114,7 +117,6 @@ async function monitor() {
     const todayKey = getLocalDateKey(now);
     
     // Порівнюємо з попереднім станом
-    const lastState = getLastKnownState();
     const comparison = compareStates(
       lastState, 
       {
@@ -375,8 +377,9 @@ async function monitor() {
     }
     didSendEmergencyAlert = needEmergency;
 
-    // Скасування аварійних — тільки якщо раніше ми справді надсилали повідомлення про аварійне
-    const emergencyEnded = lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
+    // Скасування аварійних — тільки якщо раніше ми справді надсилали повідомлення про аварійне.
+    // При недоступному пошуку адреси (groupLookupFailed) статусу аварійних не знаємо — не чіпаємо.
+    const emergencyEnded = !groupLookupFailed && lastEmergencyAlertSent && (outageStatus === 'cleared' || outageStatus === 'stabilization');
     if (emergencyEnded) {
       let clearedMessage;
       if (lastOutageStatus === 'repair') {
@@ -390,7 +393,27 @@ async function monitor() {
       didSendCancelledAlert = true;
     }
 
-    const nextEmergencyAlertSent = didSendEmergencyAlert || (!didSendCancelledAlert && outageStatus === 'active' && lastEmergencyAlertSent);
+    const nextEmergencyAlertSent = groupLookupFailed
+      ? lastEmergencyAlertSent // статус аварійних невідомий — переносимо як є
+      : (didSendEmergencyAlert || (!didSendCancelledAlert && outageStatus === 'active' && lastEmergencyAlertSent));
+
+    // Поля аварійних у стані: при недоступному пошуку переносимо попередні значення,
+    // щоб після відновлення ендпоінта не було хибних "нових" сповіщень
+    const outageStateFields = groupLookupFailed ? {
+      outageMessage: lastOutageMessage,
+      outageMessageBase: lastOutageMessageBase,
+      outageSignature: lastOutageSignature,
+      outageEmergencyKey: lastOutageEmergencyKey,
+      outageUpdateKey: lastOutageUpdateKey,
+      outageStatus: lastOutageStatus,
+    } : {
+      outageMessage: outageMessage || null,
+      outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
+      outageSignature: outageSignature || null,
+      outageEmergencyKey: outageEmergencyKey || null,
+      outageUpdateKey: outageUpdateKey || null,
+      outageStatus: outageStatus || null,
+    };
 
     // Порядок відправки: за часом оновлення інфи (спочатку те, що оновилось раніше)
     const firstSend = needSchedule && scheduleFirst ? 'schedule' : (needEmergency ? 'emergency' : null);
@@ -519,12 +542,7 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        outageMessage: outageMessage || null,
-        outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
-        outageSignature: outageSignature || null,
-        outageEmergencyKey: outageEmergencyKey || null,
-        outageUpdateKey: outageUpdateKey || null,
-        outageStatus: outageStatus || null,
+        ...outageStateFields,
         lastEmergencyAlertSent: nextEmergencyAlertSent,
         // Ранкове повідомлення відправлено якщо:
         // 1. Відправили ранкове нагадування (shouldSendMorningReport)
@@ -559,12 +577,7 @@ async function monitor() {
         tomorrowSchedule: tomorrowSchedule,
         schedule: schedule,
         timestamp: new Date().toISOString(),
-        outageMessage: outageMessage || null,
-        outageMessageBase: normalizeOutageBase(outageMessageBase || outageMessage),
-        outageSignature: outageSignature || null,
-        outageEmergencyKey: outageEmergencyKey || null,
-        outageUpdateKey: outageUpdateKey || null,
-        outageStatus: outageStatus || null,
+        ...outageStateFields,
         lastEmergencyAlertSent: nextEmergencyAlertSent,
         lastMorningReportDate: lastState?.lastMorningReportDate || null,
         lastEveningReportDate: lastState?.lastEveningReportDate || null,
@@ -580,12 +593,24 @@ async function monitor() {
     
   } catch (error) {
     console.error('❌ Помилка моніторингу:', error.message);
-    
-    // Відправляємо помилку тільки адміну
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-      await sendTelegramMessageToAdmin(`❌ <b>Помилка моніторингу</b>\n\n${error.message}`);
+
+    // Відправляємо помилку тільки адміну; однакову помилку — не частіше ніж раз на 6 годин
+    try {
+      const prevState = getLastKnownState() || {};
+      const prevError = prevState.lastAdminError || null;
+      const sameRecent = prevError && prevError.message === error.message &&
+        (Date.now() - new Date(prevError.at).getTime()) < 6 * 60 * 60 * 1000;
+
+      if (sameRecent) {
+        console.log('🔇 Така сама помилка вже надсилалась адміну <6 год тому — пропускаємо.');
+      } else if (process.env.TELEGRAM_BOT_TOKEN) {
+        await sendTelegramMessageToAdmin(`❌ <b>Помилка моніторингу</b>\n\n${error.message}`);
+        saveState({ ...prevState, lastAdminError: { message: error.message, at: new Date().toISOString() } });
+      }
+    } catch (notifyError) {
+      console.error('⚠️ Не вдалося обробити сповіщення про помилку:', notifyError.message);
     }
-    
+
     process.exit(1);
   }
 }
