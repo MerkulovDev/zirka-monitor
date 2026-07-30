@@ -55,5 +55,9 @@
     "2026-07-28": false,
     "2026-07-29": false,
     "2026-07-30": false
+  },
+  "lastAdminError": {
+    "message": "Navigation timeout of 60000 ms exceeded",
+    "at": "2026-07-30T12:49:13.381Z"
   }
 }
