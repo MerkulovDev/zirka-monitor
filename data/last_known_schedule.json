@@ -55,5 +55,9 @@
     "2026-07-28": false,
     "2026-07-29": false,
     "2026-07-30": false
+  },
+  "lastAdminError": {
+    "message": "Не вдалося витягти DisconSchedule.fact після очікування",
+    "at": "2026-07-30T00:04:48.049Z"
   }
 }
