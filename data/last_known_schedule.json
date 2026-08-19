@@ -29,12 +29,12 @@
   },
   "tomorrowSchedule": null,
   "schedule": [],
-  "timestamp": "2026-08-19T19:43:41.766Z",
+  "timestamp": "2026-08-19T20:27:37.155Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "22:31 19.08.2026",
+  "outageUpdateKey": "23:16 19.08.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-07-05",
@@ -55,9 +55,5 @@
     "2026-08-17": false,
     "2026-08-18": false,
     "2026-08-19": false
-  },
-  "lastAdminError": {
-    "message": "Не вдалося витягти DisconSchedule.fact після очікування",
-    "at": "2026-08-19T19:45:07.558Z"
   }
 }
