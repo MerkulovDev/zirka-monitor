@@ -41,6 +41,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Тема "Електроенергія" в групі мешканців. Не секрети — звичайні id.
+          TELEGRAM_GROUP_CHAT_ID: '-1003963564853'
+          TELEGRAM_GROUP_THREAD_ID: '527'
           TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
           ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
           ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
