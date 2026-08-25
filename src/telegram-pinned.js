@@ -33,6 +33,36 @@ function canSendMessage() {
   return { canSend: true, silent: false, reason: 'Робочий час' };
 }
 
+// Дублює повідомлення в тему групи будинку.
+// Пін у групу НЕ переноситься: unpinAllChatMessages зняв би закріплення в усіх темах.
+async function mirrorToGroupTopic(message, silent) {
+  const chatId = process.env.TELEGRAM_GROUP_CHAT_ID;
+  if (!chatId) return false;
+
+  try {
+    const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const payload = {
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'HTML',
+      disable_notification: silent,
+    };
+    if (process.env.TELEGRAM_GROUP_THREAD_ID) {
+      payload.message_thread_id = Number(process.env.TELEGRAM_GROUP_THREAD_ID);
+    }
+    const response = await axios.post(url, payload);
+    if (response.data.ok) {
+      console.log('✅ Продубльовано в тему групи будинку');
+      return true;
+    }
+    console.error('❌ Не вдалось продублювати в групу:', response.data);
+  } catch (error) {
+    // Канал уже отримав повідомлення — падати через дубль не варто.
+    console.error('❌ Помилка дублювання в групу:', error.message);
+  }
+  return false;
+}
+
 // Функція для відправки повідомлення в Telegram
 async function sendTelegramMessage(message, silent = false, pinMessage = false) {
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
@@ -64,7 +94,9 @@ async function sendTelegramMessage(message, silent = false, pinMessage = false) 
     if (response.data.ok) {
       const silentText = (sendStatus.silent || silent) ? ' (беззвучно)' : '';
       console.log(`✅ Повідомлення відправлено в Telegram${silentText}`);
-      
+
+      await mirrorToGroupTopic(message, sendStatus.silent || silent);
+
       // Закріплюємо повідомлення якщо потрібно
       if (pinMessage) {
         const messageId = response.data.result.message_id;
@@ -263,6 +295,7 @@ async function sendTelegramMessageToAdmin(message) {
 }
 
 module.exports = {
+  mirrorToGroupTopic,
   canSendMessage,
   sendTelegramMessage,
   sendTelegramMessageToAdmin,
