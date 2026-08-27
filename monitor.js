@@ -389,7 +389,7 @@ async function monitor() {
       } else {
         clearedMessage = 'ℹ️ Аварійне відключення скасовано — далі діють графіки погодинних відключень.';
       }
-      await sendTelegramMessage(clearedMessage, isQuietHours, false);
+      await sendTelegramMessage(clearedMessage, isQuietHours, false, 'private');
       didSendCancelledAlert = true;
     }
 
@@ -421,7 +421,7 @@ async function monitor() {
 
     for (const action of [firstSend, secondSend].filter(Boolean)) {
       if (action === 'emergency') {
-        await sendTelegramMessage(outageMessage, isQuietHours, false);
+        await sendTelegramMessage(outageMessage, isQuietHours, false, 'private');
       }
       if (action === 'schedule') {
         let title;

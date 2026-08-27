@@ -35,8 +35,14 @@ function canSendMessage() {
 
 // Дублює повідомлення в тему групи будинку.
 // Пін у групу НЕ переноситься: unpinAllChatMessages зняв би закріплення в усіх темах.
-async function mirrorToGroupTopic(message, silent) {
-  const chatId = process.env.TELEGRAM_GROUP_CHAT_ID;
+async function mirrorToGroupTopic(message, silent, target = 'group') {
+  // 'group'   — гілка мешканців: туди йдуть лише графіки.
+  // 'private' — особистий чат: аварійні та ремонтні від сайту. Їх точніше й раніше
+  //             повідомляє бот ДТЕК, тож у гілці вони були б дублем, але як резервне
+  //             джерело вони цінні.
+  const chatId = target === 'private'
+    ? process.env.TELEGRAM_PRIVATE_CHAT_ID
+    : process.env.TELEGRAM_GROUP_CHAT_ID;
   if (!chatId) return false;
 
   try {
@@ -47,12 +53,12 @@ async function mirrorToGroupTopic(message, silent) {
       parse_mode: 'HTML',
       disable_notification: silent,
     };
-    if (process.env.TELEGRAM_GROUP_THREAD_ID) {
+    if (target === 'group' && process.env.TELEGRAM_GROUP_THREAD_ID) {
       payload.message_thread_id = Number(process.env.TELEGRAM_GROUP_THREAD_ID);
     }
     const response = await axios.post(url, payload);
     if (response.data.ok) {
-      console.log('✅ Продубльовано в тему групи будинку');
+      console.log(`✅ Продубльовано (${target})`);
       return true;
     }
     console.error('❌ Не вдалось продублювати в групу:', response.data);
@@ -64,7 +70,7 @@ async function mirrorToGroupTopic(message, silent) {
 }
 
 // Функція для відправки повідомлення в Telegram
-async function sendTelegramMessage(message, silent = false, pinMessage = false) {
+async function sendTelegramMessage(message, silent = false, pinMessage = false, mirror = 'group') {
   if (!process.env.TELEGRAM_BOT_TOKEN || !process.env.TELEGRAM_CHAT_ID) {
     console.log('⚠️  Telegram не налаштовано (відсутні TELEGRAM_BOT_TOKEN або TELEGRAM_CHAT_ID)');
     return false;
@@ -95,7 +101,7 @@ async function sendTelegramMessage(message, silent = false, pinMessage = false) 
       const silentText = (sendStatus.silent || silent) ? ' (беззвучно)' : '';
       console.log(`✅ Повідомлення відправлено в Telegram${silentText}`);
 
-      await mirrorToGroupTopic(message, sendStatus.silent || silent);
+      await mirrorToGroupTopic(message, sendStatus.silent || silent, mirror);
 
       // Закріплюємо повідомлення якщо потрібно
       if (pinMessage) {

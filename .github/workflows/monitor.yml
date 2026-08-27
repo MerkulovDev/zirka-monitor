@@ -44,6 +44,8 @@ jobs:
           # Тема "Електроенергія" в групі мешканців. Не секрети — звичайні id.
           TELEGRAM_GROUP_CHAT_ID: '-1003963564853'
           TELEGRAM_GROUP_THREAD_ID: '527'
+          # Аварійні та ремонтні від сайту — сюди, бо в гілці їх дублює бот ДТЕК.
+          TELEGRAM_PRIVATE_CHAT_ID: '37021512'
           TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
           ADDRESS_CITY: ${{ secrets.ADDRESS_CITY }}
           ADDRESS_STREET: ${{ secrets.ADDRESS_STREET }}
