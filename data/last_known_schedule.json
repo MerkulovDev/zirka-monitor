@@ -29,12 +29,12 @@
   },
   "tomorrowSchedule": null,
   "schedule": [],
-  "timestamp": "2026-08-29T20:39:07.914Z",
+  "timestamp": "2026-08-29T22:27:34.868Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "23:31 29.08.2026",
+  "outageUpdateKey": "01:18 30.08.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-07-05",
@@ -45,7 +45,6 @@
   "remindersSent": {},
   "nextOutageNotificationsSent": {},
   "outageHistory": {
-    "2026-08-20": false,
     "2026-08-21": false,
     "2026-08-22": false,
     "2026-08-23": false,
@@ -54,6 +53,7 @@
     "2026-08-26": false,
     "2026-08-27": false,
     "2026-08-28": false,
-    "2026-08-29": false
+    "2026-08-29": false,
+    "2026-08-30": false
   }
 }
