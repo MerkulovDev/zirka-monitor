@@ -29,12 +29,12 @@
   },
   "tomorrowSchedule": null,
   "schedule": [],
-  "timestamp": "2026-09-10T13:17:41.651Z",
+  "timestamp": "2026-09-10T19:15:24.153Z",
   "outageMessage": null,
   "outageMessageBase": null,
   "outageSignature": null,
   "outageEmergencyKey": null,
-  "outageUpdateKey": "16:16 10.09.2026",
+  "outageUpdateKey": "22:03 10.09.2026",
   "outageStatus": "cleared",
   "lastEmergencyAlertSent": false,
   "lastMorningReportDate": "2026-07-05",
@@ -55,9 +55,5 @@
     "2026-09-08": false,
     "2026-09-09": false,
     "2026-09-10": false
-  },
-  "lastAdminError": {
-    "message": "net::ERR_HTTP2_PROTOCOL_ERROR at https://www.dtek-krem.com.ua/ua/shutdowns",
-    "at": "2026-09-10T17:00:12.356Z"
   }
 }
