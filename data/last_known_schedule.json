@@ -57,7 +57,7 @@
     "2026-09-10": false
   },
   "lastAdminError": {
-    "message": "Не вдалося витягти DisconSchedule.fact після очікування",
-    "at": "2026-09-10T16:39:58.738Z"
+    "message": "net::ERR_HTTP2_PROTOCOL_ERROR at https://www.dtek-krem.com.ua/ua/shutdowns",
+    "at": "2026-09-10T17:00:12.356Z"
   }
 }
